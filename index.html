@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LOAD24 — India's Smart Logistics Marketplace</title>
+  <meta name="description"
+    content="LOAD24 connects Truck Owners, Drivers, Fleet Owners, Transporters and Shippers on one platform. Post loads, find trucks, track shipments live, and get paid securely." />
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
+  <!-- Icons -->
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+
+<body>
+  <!-- ANNOUNCEMENT BAR -->
+  <div class="announce"><b>India's Smart Logistics Marketplace</b> — Post your first load free this month</div>
+  <!-- NAVBAR -->
+  <header class="nav" id="siteNav">
+    <div class="wrap nav-inner">
+      <a href="https://load24.in" class="logo"><span class="mark"><i data-lucide="truck"
+            style="width:20px;height:20px;"></i></span>LOAD<span>24</span></a>
+      <nav class="nav-links">
+        <a href="#hero">Home</a>
+        <a href="#why">Features</a>
+        <a href="#how">How it Works</a>
+        <a href="#pricing">Pricing</a>
+        <a href="#testimonials">Testimonials</a>
+        <a href="#faq">FAQ</a>
+        <a href="#contact">Contact</a>
+      </nav>
+      <div class="nav-actions">
+        <button class="icon-btn" id="darkToggle" aria-label="Toggle dark mode"><i data-lucide="moon"
+            style="width:18px;height:18px;"></i></button>
+
+        <a href="https://play.google.com/store/apps/details?id=com.base699327bbace8d2c0b141d1bc.app"
+          class="btn btn-primary">Download App</a>
+      </div>
+      <button class="burger" id="burgerBtn" aria-label="Open menu"><i data-lucide="menu"></i></button>
+    </div>
+    <div class="mobile-menu" id="mobileMenu">
+      <a href="#hero">Home</a>
+      <a href="#why">Features</a>
+      <a href="#how">How it Works</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#testimonials">Testimonials</a>
+      <a href="#faq">FAQ</a>
+      <a href="#contact">Contact</a>
+      <div class="mm-actions">
+        <a href="https://play.google.com/store/apps/details?id=com.base699327bbace8d2c0b141d1bc.app"
+          class="btn btn-primary btn-block">Download App</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- HERO -->
+  <section class="hero" id="hero" style="padding-top:76px;">
+    <div class="wrap hero-grid">
+      <div class="hero-copy reveal in">
+        <div class="eyebrow"><i data-lucide="sparkles" style="width:14px;height:14px;"></i> Built for Bharat's freight
+          movers</div>
+        <h1>Move Your Freight Smarter, Faster &amp; <span class="accent">Without Middlemen.</span></h1>
+        <p class="lead">India's easiest logistics marketplace connecting Truck Owners, Drivers, Transporters and
+          Shippers — one platform, zero brokers, full visibility.</p>
+        <div class="hero-btns">
+          <a href="https://load24.in/" class="btn btn-primary">Get Started <i data-lucide="arrow-right"
+              style="width:17px;height:17px;"></i></a>
+          <a href="https://play.google.com/store/apps/details?id=com.base699327bbace8d2c0b141d1bc.app"
+            class="btn btn-secondary"><i data-lucide="smartphone" style="width:17px;height:17px;"></i> Download App</a>
+          <!-- <a href="#demo" class="btn-watch"><span class="play"><i data-lucide="play"
+                style="width:15px;height:15px;"></i></span> Watch Demo</a> -->
+        </div>
+        <div class="hero-trust">
+          <div class="avatar-stack">
+            <div>RK</div>
+            <div>SM</div>
+            <div>AT</div>
+            <div>+</div>
+          </div>
+          <span>Trusted by 10,000+ transporters &amp; shippers across India</span>
+        </div>
+        <div class="hero-mini-stats">
+          <div><b>25K+</b><span>Loads Posted</span></div>
+          <div><b>5,000+</b><span>Verified Trucks</span></div>
+          <div><b>4.8<i data-lucide="star"
+                style="width:13px;height:13px;fill:currentColor;color:var(--orange);"></i></b><span>App Rating</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="hero-visual reveal d2 in">
+        <div class="hero-blob b1"></div>
+        <div class="hero-blob b2"></div>
+        <div class="dash-card">
+          <div class="dash-topbar">
+            <div class="dash-dots"><span></span><span></span><span></span></div>
+            <div class="dash-title">Live Fleet Overview</div>
+            <i data-lucide="bell" style="width:16px;height:16px;opacity:.7;"></i>
+          </div>
+          <div class="dash-map">
+            <svg class="route-svg" viewBox="0 0 300 220" preserveAspectRatio="none">
+              <path class="route-path" d="M20,180 C 90,140 110,80 180,60 S 260,40 280,20" />
+              <circle class="route-dot" cx="20" cy="180" r="5" />
+              <circle class="route-dot" cx="280" cy="20" r="5" />
+            </svg>
+            <div class="truck-chip" style="top:60%;left:28%;"><i data-lucide="truck"
+                style="width:12px;height:12px;"></i> MH-04 GT 2291</div>
+          </div>
+          <div class="dash-stats">
+            <div class="dash-stat"><b>128</b><span>Active Loads</span></div>
+            <div class="dash-stat"><b>₹2.4L</b><span>Wallet</span></div>
+            <div class="dash-stat"><b>98%</b><span>On-time</span></div>
+          </div>
+        </div>
+        <div class="float-card fc1"><span class="fic"><i data-lucide="map-pin"
+              style="width:16px;height:16px;"></i></span>Live Tracking</div>
+        <div class="float-card fc2"><span class="fic"><i data-lucide="shield-check"
+              style="width:16px;height:16px;"></i></span>Verified Loads</div>
+        <div class="float-card fc3"><span class="fic"><i data-lucide="lock"
+              style="width:16px;height:16px;"></i></span>Secure Payments</div>
+        <div class="float-card fc4"><span class="fic"><i data-lucide="bot" style="width:16px;height:16px;"></i></span>AI
+          Assistant</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TRUSTED COMPANIES -->
+  <section class="trusted">
+    <div class="wrap">
+      <p class="label reveal in">Trusted by thousands of transport businesses across India</p>
+    </div>
+    <div class="marquee">
+      <div class="marquee-track" id="marqueeTrack">
+        <span>SwiftHaul Logistics</span><span>BharatCargo</span><span>TransIndia Freight</span><span>RoadLink
+          Movers</span><span>Kargo Express</span><span>National Carriers Co.</span><span>Prime Fleet Group</span>
+        <span>SwiftHaul Logistics</span><span>BharatCargo</span><span>TransIndia Freight</span><span>RoadLink
+          Movers</span><span>Kargo Express</span><span>National Carriers Co.</span><span>Prime Fleet Group</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- WHY LOAD24 -->
+  <section id="why">
+    <div class="wrap">
+      <div class="section-head reveal in">
+        <div class="eyebrow">Why LOAD24</div>
+        <h2>Everything a freight business needs, minus the friction</h2>
+        <p>Built ground-up for the way Indian transport actually works — direct connections, verified partners, and
+          money that moves as fast as your trucks.</p>
+      </div>
+      <div class="why-grid">
+        <div class="why-card reveal in d1">
+          <div class="why-icon" style="background:linear-gradient(135deg,#2563EB,#1D4ED8);"><i
+              data-lucide="badge-check"></i></div>
+          <h3>Verified Users</h3>
+          <p>Every truck owner, driver and shipper passes KYC before they can post or book a load.</p>
+        </div>
+        <div class="why-card reveal in d2">
+          <div class="why-icon" style="background:linear-gradient(135deg,#F97316,#EA580C);"><i
+              data-lucide="map-pin"></i></div>
+          <h3>Real-Time Tracking</h3>
+          <p>Follow every shipment on a live map from pickup to delivery, no phone calls needed.</p>
+        </div>
+        <div class="why-card reveal in d3">
+          <div class="why-icon" style="background:linear-gradient(135deg,#16A34A,#15803D);"><i data-lucide="zap"></i>
+          </div>
+          <h3>Instant Load Matching</h3>
+          <p>Smart matching connects available trucks with nearby loads in seconds, not hours.</p>
+        </div>
+        <div class="why-card reveal in d4">
+          <div class="why-icon" style="background:linear-gradient(135deg,#7C3AED,#6D28D9);"><i data-lucide="wallet"></i>
+          </div>
+          <h3>Secure Payments</h3>
+          <p>In-app wallet with escrow-style protection so freight charges are paid on delivery.</p>
+        </div>
+        <div class="why-card reveal in d5">
+          <div class="why-icon" style="background:linear-gradient(135deg,#0EA5E9,#0284C7);"><i data-lucide="bot"></i>
+          </div>
+          <h3>AI Powered Support</h3>
+          <p>An AI assistant handles bookings, document checks and queries around the clock.</p>
+        </div>
+        <div class="why-card reveal in d6">
+          <div class="why-icon" style="background:linear-gradient(135deg,#F43F5E,#E11D48);"><i
+              data-lucide="headset"></i></div>
+          <h3>24×7 Customer Support</h3>
+          <p>A dedicated support team is on call for drivers, shippers and fleet owners always.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PLATFORM FEATURES -->
+  <section class="bg-surface">
+    <div class="wrap">
+      <div class="section-head reveal in">
+        <div class="eyebrow">Platform Features</div>
+        <h2>One app, every tool a logistics business runs on</h2>
+        <p>From posting your first load to managing a fleet of hundreds, LOAD24 keeps the whole operation in one place.
+        </p>
+      </div>
+      <div class="feat-grid" id="featGrid"></div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section id="how">
+    <div class="wrap">
+      <div class="section-head reveal in">
+        <div class="eyebrow">How It Works</div>
+        <h2>From sign-up to payment, six stops on the route</h2>
+        <p>The same journey every load takes on LOAD24 — simple enough to complete from a phone at a dhaba stop.</p>
+      </div>
+      <div class="route-wrap">
+        <div class="route-line-desktop"></div>
+        <div class="steps-grid">
+          <div class="step reveal in d1">
+            <div class="marker"><span>1</span><i data-lucide="user-plus"></i></div>
+            <h4>Create Account</h4>
+            <p>Sign up as a shipper, driver, fleet owner or transporter.</p>
+          </div>
+          <div class="step reveal in d2">
+            <div class="marker"><span>2</span><i data-lucide="shield-check"></i></div>
+            <h4>Complete KYC</h4>
+            <p>Upload documents and get verified to unlock full access.</p>
+          </div>
+          <div class="step reveal in d3">
+            <div class="marker"><span>3</span><i data-lucide="package-plus"></i></div>
+            <h4>Post Load / Find Truck</h4>
+            <p>List a shipment or search for available trucks nearby.</p>
+          </div>
+          <div class="step reveal in d4">
+            <div class="marker"><span>4</span><i data-lucide="rocket"></i></div>
+            <h4>Start Journey</h4>
+            <p>Confirm the booking and the truck sets off on route.</p>
+          </div>
+          <div class="step reveal in d5">
+            <div class="marker"><span>5</span><i data-lucide="radar"></i></div>
+            <h4>Track Live</h4>
+            <p>Watch progress in real time until the load is delivered.</p>
+          </div>
+          <div class="step reveal in d6">
+            <div class="marker"><span>6</span><i data-lucide="credit-card"></i></div>
+            <h4>Complete Payment</h4>
+            <p>Release payment securely through the LOAD24 wallet.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MOBILE APP SECTION -->
+  <section id="app-download">
+    <div class="app-section reveal in">
+      <div class="app-inner">
+        <div class="phones">
+          <div class="phone back">
+            <div class="phone-screen">
+              <div class="ph-head"><span>9:41</span><span>●●●</span></div>
+              <div class="ph-bar"></div>
+              <div class="ph-card">Load #LD2291<br><span style="opacity:.6">Mumbai → Pune</span></div>
+              <div class="ph-card">Driver: Ramesh K.</div>
+              <div class="ph-card">ETA: 2h 40m</div>
+            </div>
+          </div>
+          <div class="phone front">
+            <div class="phone-screen">
+              <div class="ph-head"><span>9:41</span><span>●●●</span></div>
+              <div class="ph-bar" style="width:45%;background:#16A34A;"></div>
+              <div class="ph-card">Wallet Balance<br><b style="font-size:16px;">₹48,200</b></div>
+              <div class="ph-card">✔ Delivery confirmed</div>
+              <div class="ph-card">📍 Live tracking on</div>
+              <div class="ph-card">🔔 New load nearby</div>
+            </div>
+          </div>
+        </div>
+        <div class="app-copy">
+          <div class="eyebrow" style="background:rgba(255,255,255,0.12);color:#fff;">Mobile App</div>
+          <h2>Manage everything from your phone.</h2>
+          <p>Post loads at a toll booth, track a driver from a dhaba, settle payments before you're back home — LOAD24
+            goes wherever the highway takes you.</p>
+          <ul class="app-feat-list">
+            <li><i data-lucide="circle-check-big" style="width:17px;height:17px;"></i> Live Tracking</li>
+            <li><i data-lucide="circle-check-big" style="width:17px;height:17px;"></i> Push Notifications</li>
+            <li><i data-lucide="circle-check-big" style="width:17px;height:17px;"></i> Wallet</li>
+            <li><i data-lucide="circle-check-big" style="width:17px;height:17px;"></i> Loads</li>
+            <li><i data-lucide="circle-check-big" style="width:17px;height:17px;"></i> Driver Updates</li>
+            <li><i data-lucide="circle-check-big" style="width:17px;height:17px;"></i> Support Chat</li>
+          </ul>
+          <div class="store-btns">
+            <a href="https://play.google.com/store/apps/details?id=com.base699327bbace8d2c0b141d1bc.app"
+              class="store-btn"><i data-lucide="circle-play" style="width:22px;height:22px;"></i><span><small>Get it
+                  on</small><strong>Google
+                  Play</strong></span></a>
+            <a href="https://play.google.com/store/apps/details?id=com.base699327bbace8d2c0b141d1bc.app"
+              class="store-btn"><i data-lucide="apple" style="width:22px;height:22px;"></i><span><small>Download
+                  on</small><strong>App
+                  Store</strong></span></a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STATISTICS -->
+  <section class="bg-surface">
+    <div class="wrap">
+      <div class="stats-grid reveal in">
+        <div class="stat-item"><b class="counter" data-target="10000" data-suffix="+">0</b><span>Registered Users</span>
+        </div>
+        <div class="stat-item"><b class="counter" data-target="25000" data-suffix="+">0</b><span>Loads Posted</span>
+        </div>
+        <div class="stat-item"><b class="counter" data-target="5000" data-suffix="+">0</b><span>Verified Trucks</span>
+        </div>
+        <div class="stat-item"><b class="counter" data-target="98" data-suffix="%">0</b><span>Successful
+            Deliveries</span></div>
+        <div class="stat-item"><b>24×7</b><span>Support</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DASHBOARD SHOWCASE -->
+  <section id="demo">
+    <div class="wrap">
+      <div class="section-head reveal in">
+        <div class="eyebrow">Dashboard</div>
+        <h2>A control room for your entire fleet</h2>
+        <p>Every load, every driver, every rupee — visible on a single, real-time dashboard.</p>
+      </div>
+      <div class="showcase-panel reveal in">
+        <div class="showcase-mock">
+          <div class="mock-topbar">
+            <div class="mock-dots"><span></span><span></span><span></span></div><i data-lucide="layout-dashboard"
+              style="width:14px;height:14px;color:rgba(255,255,255,.5);"></i>
+          </div>
+          <div class="mock-body">
+            <div class="mock-side">
+              <div class="msi active"><i data-lucide="layout-grid" style="width:14px;height:14px;"></i> Overview</div>
+              <div class="msi"><i data-lucide="package" style="width:14px;height:14px;"></i> Loads</div>
+              <div class="msi"><i data-lucide="map" style="width:14px;height:14px;"></i> Tracking</div>
+              <div class="msi"><i data-lucide="wallet" style="width:14px;height:14px;"></i> Wallet</div>
+              <div class="msi"><i data-lucide="file-text" style="width:14px;height:14px;"></i> Documents</div>
+              <div class="msi"><i data-lucide="bot" style="width:14px;height:14px;"></i> AI Assistant</div>
+            </div>
+            <div class="mock-main">
+              <div class="mock-tile"><b>₹18.6L</b><span>Revenue this month</span>
+                <div class="bar"><i style="width:72%;"></i></div>
+              </div>
+              <div class="mock-tile"><b>312</b><span>Active shipments</span>
+                <div class="bar"><i style="width:55%;"></i></div>
+              </div>
+              <div class="mock-tile"><b>96.4%</b><span>On-time rate</span>
+                <div class="bar"><i style="width:96%;"></i></div>
+              </div>
+              <div class="mock-tile"><b>47</b><span>Trucks on road</span>
+                <div class="bar"><i style="width:64%;"></i></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="showcase-cards">
+          <div class="sc-card"><i data-lucide="chart-column"></i>
+            <h5>Analytics</h5>
+            <p>Revenue, load and performance trends at a glance.</p>
+          </div>
+          <div class="sc-card"><i data-lucide="navigation"></i>
+            <h5>Tracking</h5>
+            <p>Live GPS location for every truck on the road.</p>
+          </div>
+          <div class="sc-card"><i data-lucide="wallet"></i>
+            <h5>Wallet</h5>
+            <p>Deposits, payouts and freight charges, all in one ledger.</p>
+          </div>
+          <div class="sc-card"><i data-lucide="boxes"></i>
+            <h5>Load Management</h5>
+            <p>Post, assign and monitor loads from a single board.</p>
+          </div>
+          <div class="sc-card"><i data-lucide="file-check"></i>
+            <h5>Documents</h5>
+            <p>Store RC, insurance, permits and PODs securely.</p>
+          </div>
+          <div class="sc-card"><i data-lucide="bot"></i>
+            <h5>AI Assistant</h5>
+            <p>Ask questions and get help without waiting on hold.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TESTIMONIALS -->
+  <section class="bg-surface" id="testimonials">
+    <div class="wrap">
+      <div class="section-head reveal in">
+        <div class="eyebrow">Testimonials</div>
+        <h2>Trusted on the road, verified in the reviews</h2>
+        <p>What truck owners, fleet operators and shippers say after moving to LOAD24.</p>
+      </div>
+      <div class="testi-wrap reveal in">
+        <button class="testi-arrow left" id="testiPrev"><i data-lucide="chevron-left"></i></button>
+        <button class="testi-arrow right" id="testiNext"><i data-lucide="chevron-right"></i></button>
+        <div id="testiSlide"></div>
+        <div class="testi-nav" id="testiNav"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PRICING -->
+  <section id="pricing">
+    <div class="wrap">
+      <div class="section-head reveal in">
+        <div class="eyebrow">Pricing</div>
+        <h2>Plans that scale with your fleet</h2>
+        <p>Start free, upgrade when your load volume grows. No lock-in, no hidden broker fees.</p>
+      </div>
+      <div class="pricing-grid">
+        <div class="price-card reveal in d1">
+          <h3>Free</h3>
+          <p class="p-desc">For individual truck owners and drivers getting started.</p>
+          <div class="p-amount"><b>₹0</b><span>/ month</span></div>
+          <ul class="price-list">
+            <li><i data-lucide="check"></i> Post up to 5 loads / month</li>
+            <li><i data-lucide="check"></i> Basic load matching</li>
+            <li><i data-lucide="check"></i> KYC verification</li>
+            <li><i data-lucide="check"></i> Standard support</li>
+            <li class="off"><i data-lucide="x"></i> Real-time GPS tracking</li>
+            <li class="off"><i data-lucide="x"></i> AI assistant</li>
+          </ul>
+          <a href="#" class="btn btn-secondary btn-block">Get Started</a>
+        </div>
+        <div class="price-card popular reveal in d2">
+          <span class="price-badge">Most Popular</span>
+          <h3>Premium</h3>
+          <p class="p-desc">For transporters and fleet owners running daily loads.</p>
+          <div class="p-amount"><b>₹999</b><span>/ month</span></div>
+          <ul class="price-list">
+            <li><i data-lucide="check"></i> Unlimited load postings</li>
+            <li><i data-lucide="check"></i> Priority load matching</li>
+            <li><i data-lucide="check"></i> Real-time GPS tracking</li>
+            <li><i data-lucide="check"></i> AI powered support</li>
+            <li><i data-lucide="check"></i> Wallet &amp; instant payouts</li>
+            <li><i data-lucide="check"></i> Referral rewards</li>
+          </ul>
+          <a href="#" class="btn btn-primary btn-block">Start Free Trial</a>
+        </div>
+        <div class="price-card reveal in d3">
+          <h3>Enterprise</h3>
+          <p class="p-desc">For large fleets and transport companies at scale.</p>
+          <div class="p-amount"><b>Custom</b></div>
+          <ul class="price-list">
+            <li><i data-lucide="check"></i> Everything in Premium</li>
+            <li><i data-lucide="check"></i> Dedicated account manager</li>
+            <li><i data-lucide="check"></i> Fleet performance dashboard</li>
+            <li><i data-lucide="check"></i> API &amp; integrations</li>
+            <li><i data-lucide="check"></i> Custom SLAs</li>
+            <li><i data-lucide="check"></i> 24×7 priority support</li>
+          </ul>
+          <a href="#" class="btn btn-dark btn-block">Contact Sales</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="bg-surface" id="faq">
+    <div class="wrap">
+      <div class="section-head reveal in">
+        <div class="eyebrow">FAQ</div>
+        <h2>Questions, answered</h2>
+        <p>Everything you need to know before you post your first load.</p>
+      </div>
+      <div class="faq-list" id="faqList"></div>
+    </div>
+  </section>
+
+  <!-- CTA BANNER -->
+  <section>
+    <div class="cta-banner reveal in">
+      <h2>Ready to Move Smarter?</h2>
+      <p>Join India's fastest growing logistics marketplace — free to sign up, no broker fees.</p>
+      <div class="cta-btns">
+        <a href="#pricing" class="btn btn-primary">Create Free Account</a>
+        <a href="https://play.google.com/store/apps/details?id=com.base699327bbace8d2c0b141d1bc.app"
+          class="btn btn-ghost"><i data-lucide="smartphone" style="width:17px;height:17px;"></i>
+          Download App</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer id="contact">
+    <div class="wrap">
+      <div class="foot-grid">
+        <div class="foot-brand">
+          <a href="#" class="logo"><span class="mark"><i data-lucide="truck"
+                style="width:20px;height:20px;"></i></span>LOAD<span>24</span></a>
+          <p>India's smart logistics marketplace connecting truck owners, drivers, fleet owners, transporters and
+            shippers on one platform.</p>
+          <div class="foot-social">
+            <a href="#" aria-label="Facebook"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
+              </svg></a>
+            <a href="#" aria-label="X (Twitter)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 4l16 16M20 4L4 20" />
+              </svg></a>
+            <a href="#" aria-label="Instagram"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="5" />
+                <circle cx="12" cy="12" r="4" />
+                <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none" />
+              </svg></a>
+            <a href="#" aria-label="LinkedIn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="9" width="4" height="12" />
+                <circle cx="5" cy="4" r="2" />
+                <path d="M11 21v-7a3 3 0 0 1 6 0v7M11 9v12" />
+              </svg></a>
+          </div>
+        </div>
+        <div class="foot-col">
+          <h5>Company</h5>
+          <ul>
+            <li><a href="#hero">About</a></li>
+            <li><a href="#why">Features</a></li>
+            <li><a href="#pricing">Pricing</a></li>
+            <li><a href="#">Blog</a></li>
+          </ul>
+        </div>
+        <div class="foot-col">
+          <h5>Support</h5>
+          <ul>
+            <li><a href="#faq">Help Center</a></li>
+            <li><a href="#">Support Tickets</a></li>
+            <li><a href="#contact">Contact Us</a></li>
+
+          </ul>
+        </div>
+        <div class="foot-col">
+          <h5>Legal</h5>
+          <ul>
+            <li><a href="#">Privacy Policy</a></li>
+            <li><a href="#">Terms of Service</a></li>
+            <li><a href="#">KYC Policy</a></li>
+            <li><a href="#">Refunds</a></li>
+          </ul>
+        </div>
+        <div class="foot-col">
+          <h5>Get the App</h5>
+          <ul>
+            <li><a href="https://play.google.com/store/apps/details?id=com.base699327bbace8d2c0b141d1bc.app">Google
+                Play</a></li>
+            <li><a href="https://apps.apple.com/app/id1592784321">App Store</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="foot-bottom">
+        <span>© 2026 LOAD24. All rights reserved.</span>
+        <span>Made for India's highways 🇮🇳</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- FLOATING CTA -->
+  <a href="https://wa.me/919876543210?text=Hi%20LOAD24%2C%20I%27d%20like%20to%20know%20more" target="_blank"
+    rel="noopener" class="floating-cta" id="floatCta" aria-label="Chat with us on WhatsApp">
+    <svg width="26" height="26" viewBox="0 0 32 32" fill="currentColor">
+      <path
+        d="M16.02 3C9.4 3 4.02 8.37 4.02 15c0 2.22.6 4.3 1.65 6.09L3 29l8.1-2.6a11.9 11.9 0 0 0 4.92 1.06h.01c6.62 0 12-5.37 12-12S22.64 3 16.02 3zm0 21.8h-.01a9.8 9.8 0 0 1-5-1.37l-.36-.21-3.7 1.19 1.21-3.6-.24-.37A9.79 9.79 0 0 1 6.22 15c0-5.4 4.4-9.8 9.8-9.8 5.4 0 9.8 4.4 9.8 9.8s-4.4 9.8-9.8 9.8zm5.37-7.34c-.29-.15-1.74-.86-2.01-.96-.27-.1-.47-.15-.66.15-.2.29-.76.96-.93 1.15-.17.2-.34.22-.63.07-.29-.15-1.23-.45-2.34-1.44-.87-.77-1.45-1.72-1.62-2.01-.17-.29-.02-.45.13-.6.13-.13.29-.34.44-.51.15-.17.2-.29.29-.49.1-.2.05-.37-.02-.51-.07-.15-.66-1.59-.9-2.18-.24-.57-.48-.49-.66-.5h-.56c-.2 0-.51.07-.78.37-.27.29-1.02 1-1.02 2.44s1.05 2.83 1.19 3.03c.15.2 2.06 3.14 4.99 4.4.7.3 1.24.48 1.67.61.7.22 1.34.19 1.84.12.56-.08 1.74-.71 1.98-1.4.24-.68.24-1.27.17-1.4-.07-.13-.26-.2-.55-.34z" />
+    </svg>
+  </a>
+
+  <script>
+    lucide.createIcons();
+
+    /* ---------- Sticky navbar shadow ---------- */
+    const siteNav = document.getElementById('siteNav');
+    window.addEventListener('scroll', () => {
+      siteNav.classList.toggle('scrolled', window.scrollY > 12);
+    });
+
+    /* ---------- Scrollspy: highlight active nav link ---------- */
+    const navAnchors = document.querySelectorAll('.nav-links a');
+    const spySections = Array.from(navAnchors)
+      .map(a => document.querySelector(a.getAttribute('href')))
+      .filter(Boolean);
+    const spyIo = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const id = '#' + entry.target.id;
+          navAnchors.forEach(a => a.classList.toggle('active', a.getAttribute('href') === id));
+        }
+      });
+    }, { rootMargin: '-40% 0px -50% 0px', threshold: 0 });
+    spySections.forEach(sec => spyIo.observe(sec));
+
+    /* ---------- Mobile menu ---------- */
+    const burgerBtn = document.getElementById('burgerBtn');
+    const mobileMenu = document.getElementById('mobileMenu');
+    burgerBtn.addEventListener('click', () => {
+      mobileMenu.classList.toggle('open');
+      burgerBtn.innerHTML = mobileMenu.classList.contains('open')
+        ? '<i data-lucide="x"></i>' : '<i data-lucide="menu"></i>';
+      lucide.createIcons();
+    });
+    mobileMenu.querySelectorAll('a').forEach(a => a.addEventListener('click', () => {
+      mobileMenu.classList.remove('open');
+      burgerBtn.innerHTML = '<i data-lucide="menu"></i>';
+      lucide.createIcons();
+    }));
+
+    /* ---------- Dark mode ---------- */
+    const darkToggle = document.getElementById('darkToggle');
+    darkToggle.addEventListener('click', () => {
+      document.body.classList.toggle('dark');
+      const isDark = document.body.classList.contains('dark');
+      darkToggle.innerHTML = isDark ? '<i data-lucide="sun" style="width:18px;height:18px;"></i>' : '<i data-lucide="moon" style="width:18px;height:18px;"></i>';
+      lucide.createIcons();
+    });
+
+    /* ---------- Scroll reveal ---------- */
+    const revealEls = document.querySelectorAll('.reveal');
+    revealEls.forEach(el => el.classList.remove('in'));
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('in');
+          io.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.15 });
+    revealEls.forEach(el => io.observe(el));
+
+    /* ---------- Counter animation ---------- */
+    const counters = document.querySelectorAll('.counter');
+    const countIo = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const el = entry.target;
+          const target = parseInt(el.dataset.target, 10);
+          const suffix = el.dataset.suffix || '';
+          const duration = 1400;
+          const start = performance.now();
+          function tick(now) {
+            const progress = Math.min((now - start) / duration, 1);
+            const eased = 1 - Math.pow(1 - progress, 3);
+            el.textContent = Math.floor(eased * target).toLocaleString('en-IN') + suffix;
+            if (progress < 1) requestAnimationFrame(tick);
+          }
+          requestAnimationFrame(tick);
+          countIo.unobserve(el);
+        }
+      });
+    }, { threshold: 0.5 });
+    counters.forEach(c => countIo.observe(c));
+
+    /* ---------- Platform Features grid ---------- */
+    const features = [
+      ['package-search', 'Find Loads', 'Browse verified loads matched to your route.'],
+      ['package-plus', 'Post Loads', 'List a shipment and get offers within minutes.'],
+      ['truck', 'Find Trucks', 'Search available trucks near your pickup point.'],
+      ['truck-electric', 'Post Empty Truck', 'Let shippers find you on your return trip.'],
+      ['users', 'Driver Management', 'Assign drivers and track their trip history.'],
+      ['layout-dashboard', 'Fleet Dashboard', 'Monitor every vehicle in your fleet at once.'],
+      ['wallet', 'Wallet', 'Deposit, withdraw and settle freight payments.'],
+      ['shield-check', 'KYC Verification', 'Get verified once, transact with confidence.'],
+      ['file-up', 'Document Upload', 'Store RC, permits, insurance and PODs.'],
+      ['gift', 'Referral Program', 'Earn rewards for every partner you bring in.'],
+      ['calculator', 'Profit Calculator', 'Estimate trip cost, fuel and margin upfront.'],
+      ['line-chart', 'Performance Dashboard', 'Track on-time rate, earnings and trends.'],
+      ['ticket', 'Support Tickets', 'Raise and track issues until they are resolved.'],
+      ['map-pin', 'GPS Tracking', 'Live location for every load in transit.'],
+      ['bell-ring', 'Notifications', 'Stay updated on bookings, bids and payments.'],
+      ['star', 'Ratings & Reviews', 'Build trust with a transparent rating history.'],
+    ];
+    document.getElementById('featGrid').innerHTML = features.map(f => `
+  <div class="feat-item reveal in">
+    <div class="fi-icon"><i data-lucide="${f[0]}" style="width:20px;height:20px;"></i></div>
+    <h4>${f[1]}</h4><p>${f[2]}</p>
+  </div>
+`).join('');
+
+    /* ---------- FAQ ---------- */
+    const faqs = [
+      ['How do I post a load?', 'Sign up, complete KYC, then use "Post Load" to enter pickup, drop and cargo details. Verified trucks nearby can view and bid on it instantly.'],
+      ['How do I find trucks?', 'Use "Find Trucks" and filter by route, truck type and availability date. You can contact or book a matching truck directly in-app.'],
+      ['How is payment secured?', 'Freight charges are held in the LOAD24 wallet and released to the truck owner once delivery is confirmed, protecting both sides of the transaction.'],
+      ['Is KYC mandatory?', 'Yes. Every user completes KYC verification before posting loads or accepting bookings, which keeps the marketplace safe for everyone.'],
+      ['Can I track shipments?', 'Yes, every active load can be tracked live on the map from pickup to delivery, with status updates sent as push notifications.'],
+      ['Is the app free?', 'The Free plan lets you post a limited number of loads at no cost. Premium and Enterprise plans unlock unlimited postings and advanced tools.'],
+      ['Who can join LOAD24?', 'Truck owners, drivers, fleet owners, transporters and shippers can all create an account and use the platform suited to their role.'],
+      ['What documents are needed for KYC?', 'You will typically need a PAN card, Aadhaar, and vehicle documents like RC and insurance if you are registering a truck.'],
+      ['Can I manage multiple trucks?', 'Yes, fleet owners get a dashboard to add drivers, assign vehicles to loads and monitor performance across the whole fleet.'],
+      ['How does the referral program work?', 'Share your referral code with other transporters and shippers — both of you earn wallet credit once they complete their first transaction.'],
+      ['What if a driver misses a delivery deadline?', 'Delays are flagged in the dashboard and support can help mediate. Ratings reflect on-time performance to guide future bookings.'],
+      ['Does LOAD24 charge a commission?', 'Free plan loads carry a small platform fee; Premium and Enterprise plans reduce or remove per-load charges depending on the plan.'],
+      ['Can I use LOAD24 without the mobile app?', 'Yes, the full platform is available on web as well as iOS and Android apps, so you can manage loads from a desktop or on the move.'],
+      ['How do I contact support?', 'Use the in-app AI assistant for instant answers, or raise a support ticket for issues that need a human agent — support is available 24×7.'],
+      ['Is my data safe with LOAD24?', 'All KYC documents and payment data are encrypted and stored securely, and are only used to verify identity and process transactions.'],
+    ];
+    document.getElementById('faqList').innerHTML = faqs.map((f, i) => `
+  <div class="faq-item reveal in" data-i="${i}">
+    <button class="faq-q">${f[0]} <i data-lucide="plus" style="width:18px;height:18px;"></i></button>
+    <div class="faq-a"><p>${f[1]}</p></div>
+  </div>
+`).join('');
+    document.querySelectorAll('.faq-q').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const item = btn.closest('.faq-item');
+        const answer = item.querySelector('.faq-a');
+        const wasOpen = item.classList.contains('open');
+        document.querySelectorAll('.faq-item.open').forEach(o => {
+          o.classList.remove('open');
+          o.querySelector('.faq-a').style.maxHeight = null;
+        });
+        if (!wasOpen) {
+          item.classList.add('open');
+          answer.style.maxHeight = answer.scrollHeight + 'px';
+        }
+      });
+    });
+
+    /* ---------- Testimonials slider ---------- */
+    const testimonials = [
+      { name: 'Rajesh Kumar', role: 'Truck Owner, Nagpur', text: 'LOAD24 cut out the broker completely. I find return loads on my own route now and get paid the same day.' },
+      { name: 'Sunita Mehta', role: 'Fleet Owner, Ahmedabad', text: 'Managing 40 trucks used to mean forty phone calls a day. The fleet dashboard alone has saved us hours every week.' },
+      { name: 'Anil Transport Co.', role: 'Transport Company, Delhi', text: 'KYC verification means we only deal with genuine truck owners. Our disputes have dropped since we moved to LOAD24.' },
+      { name: 'Priya Shah', role: 'Shipper, Surat', text: 'I post a load and within minutes I have verified truck options with live tracking. It has made shipping predictable.' },
+    ];
+    let testiIdx = 0;
+    const testiSlide = document.getElementById('testiSlide');
+    const testiNav = document.getElementById('testiNav');
+    function renderTesti() {
+      const t = testimonials[testiIdx];
+      testiSlide.innerHTML = `
+    <div class="testi-slide">
+      <div class="testi-stars">${'<i data-lucide="star" style="width:16px;height:16px;fill:currentColor;"></i>'.repeat(5)}</div>
+      <p class="testi-quote">"${t.text}"</p>
+      <div class="testi-person">
+        <div class="testi-avatar">${t.name.split(' ').map(w => w[0]).slice(0, 2).join('')}</div>
+        <div><b>${t.name}</b><span>${t.role}</span></div>
+      </div>
+    </div>`;
+      testiNav.innerHTML = testimonials.map((_, i) => `<button class="testi-dot ${i === testiIdx ? 'active' : ''}" data-i="${i}"></button>`).join('');
+      lucide.createIcons();
+      testiNav.querySelectorAll('.testi-dot').forEach(d => d.addEventListener('click', () => { testiIdx = +d.dataset.i; renderTesti(); }));
+    }
+    document.getElementById('testiPrev').addEventListener('click', () => { testiIdx = (testiIdx - 1 + testimonials.length) % testimonials.length; renderTesti(); });
+    document.getElementById('testiNext').addEventListener('click', () => { testiIdx = (testiIdx + 1) % testimonials.length; renderTesti(); });
+    renderTesti();
+    setInterval(() => { testiIdx = (testiIdx + 1) % testimonials.length; renderTesti(); }, 6000);
+
+    lucide.createIcons();
+  </script>
+</body>
+
+</html>
