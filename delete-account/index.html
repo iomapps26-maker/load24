@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Delete Your Account — LOAD24</title>
+  <meta name="description"
+    content="How to request deletion of your LOAD24 account and data, including which data is removed and which is retained." />
+  <meta name="robots" content="index, follow" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  <link rel="stylesheet" href="../css/style.css" />
+  <style>
+    .da-wrap {
+      max-width: 820px;
+      margin: 0 auto;
+      padding: 96px 20px 80px;
+    }
+
+    .da-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(37, 99, 235, .08);
+      color: var(--blue-dark);
+      font-weight: 600;
+      font-size: 13px;
+      padding: 6px 14px;
+      border-radius: 999px;
+      margin-bottom: 18px;
+    }
+
+    .da-wrap h1 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 34px;
+      margin: 0 0 10px;
+    }
+
+    .da-sub {
+      color: var(--slate);
+      font-size: 16px;
+      margin: 0 0 40px;
+    }
+
+    .da-card {
+      background: var(--white);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-soft);
+      padding: 32px;
+      margin-bottom: 28px;
+    }
+
+    .da-card h2 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 21px;
+      margin: 0 0 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .da-card h2 i {
+      color: var(--blue);
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0;
+    }
+
+    .da-card p {
+      color: var(--slate);
+      line-height: 1.7;
+      margin: 0 0 12px;
+    }
+
+    .da-steps {
+      counter-reset: step;
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    .da-steps li {
+      counter-increment: step;
+      position: relative;
+      padding-left: 44px;
+      margin-bottom: 14px;
+      color: var(--ink);
+      line-height: 1.6;
+    }
+
+    .da-steps li::before {
+      content: counter(step);
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--blue), var(--blue-dark));
+      color: #fff;
+      font-weight: 700;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .da-note {
+      background: var(--surface);
+      border-left: 4px solid var(--blue);
+      border-radius: 10px;
+      padding: 14px 18px;
+      color: var(--slate);
+      font-size: 14px;
+      margin-top: 16px;
+    }
+
+    .da-table-wrap {
+      overflow-x: auto;
+    }
+
+    table.da-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14.5px;
+    }
+
+    table.da-table th {
+      text-align: left;
+      background: var(--surface);
+      color: var(--ink);
+      font-weight: 700;
+      padding: 12px 14px;
+      border-bottom: 2px solid var(--line);
+    }
+
+    table.da-table td {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--line);
+      color: var(--slate);
+      vertical-align: top;
+    }
+
+    table.da-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .da-tag {
+      display: inline-block;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 999px;
+    }
+
+    .da-tag.del {
+      background: rgba(22, 163, 74, .12);
+      color: #15803D;
+    }
+
+    .da-tag.ret {
+      background: rgba(249, 115, 22, .12);
+      color: #EA580C;
+    }
+
+    .da-contact-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    body.dark .da-card {
+      background: #101A33;
+      border-color: rgba(255, 255, 255, .08);
+    }
+
+    body.dark .da-note {
+      background: rgba(37, 99, 235, .1);
+    }
+
+    body.dark table.da-table th {
+      background: rgba(255, 255, 255, .04);
+    }
+  </style>
+</head>
+
+<body>
+  <header class="nav" id="siteNav">
+    <div class="wrap nav-inner">
+      <a href="https://load24.in" class="logo"><span class="mark"><i data-lucide="truck"
+            style="width:20px;height:20px;"></i></span>LOAD<span>24</span></a>
+      <nav class="nav-links">
+        <a href="https://load24.in/">Home</a>
+      </nav>
+      <div class="nav-actions">
+        <button class="icon-btn" id="darkToggle" aria-label="Toggle dark mode"><i data-lucide="moon"
+            style="width:18px;height:18px;"></i></button>
+        <a href="https://play.google.com/store/apps/details?id=com.base699327bbace8d2c0b141d1bc.app"
+          class="btn btn-primary">Download App</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="da-wrap">
+    <div class="da-eyebrow"><i data-lucide="shield-check" style="width:14px;height:14px;"></i> Account &amp; Data
+      Deletion</div>
+    <h1>Delete Your LOAD24 Account</h1>
+    <p class="da-sub">This page explains how to request deletion of your LOAD24 account and data, exactly what gets
+      deleted, what (if anything) is retained, and for how long. This page is public and does not require you to log
+      in or download the app.</p>
+
+    <div class="da-card">
+      <h2><i data-lucide="badge-check"></i> About this page</h2>
+      <p><b>App / Developer:</b> LOAD24 — India's Smart Logistics Marketplace, published on Google Play as listed at
+        <a href="https://play.google.com/store/apps/details?id=com.base699327bbace8d2c0b141d1bc.app" target="_blank"
+          rel="noopener">this Play Store listing</a>. This is the official account deletion page for the LOAD24 app
+        and matches the developer name shown on the Play Store listing.</p>
+    </div>
+
+    <div class="da-card">
+      <h2><i data-lucide="list-checks"></i> How to request account deletion</h2>
+      <p><b>Option 1 — In the app (fastest):</b></p>
+      <ol class="da-steps">
+        <li>Open the LOAD24 app and go to <b>Profile → Settings → Delete Account</b>.</li>
+        <li>Confirm your identity via <b>OTP (sent to your registered mobile number)</b> or your <b>MPIN</b>.</li>
+        <li>Submit the request. Your account is deactivated immediately and permanently deleted within <b>30
+            days</b>.</li>
+      </ol>
+      <p style="margin-top:22px;"><b>Option 2 — Web form / email (no app or login required):</b></p>
+      <ol class="da-steps">
+        <li>Email <b>support@load24.in</b> with the subject line "Account Deletion Request".</li>
+        <li>Include your <b>registered mobile number</b> (and email, if used to sign up) so we can locate your
+          account.</li>
+        <li>We verify the request and process deletion within <b>30 days</b>, and confirm by email once complete.
+        </li>
+      </ol>
+      <a href="mailto:support@load24.in?subject=Account%20Deletion%20Request&body=Registered%20mobile%20number%3A%20%0ARegistered%20email%20(if%20any)%3A%20%0A%0AI%20am%20requesting%20permanent%20deletion%20of%20my%20LOAD24%20account%20and%20associated%20data."
+        class="btn btn-primary da-contact-btn"><i data-lucide="mail" style="width:16px;height:16px;"></i> Email
+        support@load24.in</a>
+      <div class="da-note">Deletion is permanent and cannot be undone. If you have an active load, booking, or wallet
+        balance, settle or withdraw it before requesting deletion.</div>
+    </div>
+
+    <div class="da-card">
+      <h2><i data-lucide="database"></i> What data is deleted</h2>
+      <p>The following data is <b>permanently deleted</b> from LOAD24's systems once your deletion request is
+        processed:</p>
+      <div class="da-table-wrap">
+        <table class="da-table">
+          <thead>
+            <tr>
+              <th style="width:34%;">Category</th>
+              <th>Data</th>
+              <th style="width:14%;">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Profile</td>
+              <td>Name, email, mobile number, company name/address, city, state, pincode, GST number, trust score,
+                ratings &amp; reviews</td>
+              <td><span class="da-tag del">Deleted</span></td>
+            </tr>
+            <tr>
+              <td>KYC documents</td>
+              <td>Aadhaar, PAN, driving license, vehicle RC, insurance, GST certificate, company registration, bank
+                proof (private storage)</td>
+              <td><span class="da-tag del">Deleted</span></td>
+            </tr>
+            <tr>
+              <td>Bank details</td>
+              <td>Account number, IFSC, account holder name</td>
+              <td><span class="da-tag del">Deleted</span></td>
+            </tr>
+            <tr>
+              <td>Security</td>
+              <td>MPIN hash and lockout data, WhatsApp OTP records</td>
+              <td><span class="da-tag del">Deleted</span></td>
+            </tr>
+            <tr>
+              <td>Device</td>
+              <td>Device tokens and push notification tokens</td>
+              <td><span class="da-tag del">Deleted</span></td>
+            </tr>
+            <tr>
+              <td>Consent</td>
+              <td>Consent records</td>
+              <td><span class="da-tag del">Deleted</span></td>
+            </tr>
+            <tr>
+              <td>Activity</td>
+              <td>Load/booking history, bids &amp; offers, voice notes</td>
+              <td><span class="da-tag del">Deleted</span></td>
+            </tr>
+            <tr>
+              <td>Support</td>
+              <td>Support tickets</td>
+              <td><span class="da-tag del">Deleted</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="da-card">
+      <h2><i data-lucide="archive"></i> What data is retained, and why</h2>
+      <p>We retain only what Indian law requires us to keep, and only for as long as the law requires:</p>
+      <div class="da-table-wrap">
+        <table class="da-table">
+          <thead>
+            <tr>
+              <th style="width:34%;">Category</th>
+              <th>Reason &amp; retention period</th>
+              <th style="width:14%;">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Financial &amp; transaction records (e.g. GST-linked invoices, payment ledgers)</td>
+              <td>Required under Indian tax and financial regulations. Retained for <b>8 years</b> from the date of
+                the transaction, then permanently deleted.</td>
+              <td><span class="da-tag ret">Retained</span></td>
+            </tr>
+            <tr>
+              <td>Records tied to an active legal or regulatory dispute</td>
+              <td>Retained only until the dispute is resolved, as required by law, then deleted.</td>
+              <td><span class="da-tag ret">Retained</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="da-note">Beyond these two legally-mandated exceptions, LOAD24 does not retain any personal data
+        after account deletion. Retained financial records are used solely for legal/tax compliance and are not used
+        to provide app functionality after your account is deleted.</div>
+    </div>
+
+    <div class="da-card">
+      <h2><i data-lucide="clock"></i> Timeline</h2>
+      <p>Deletion requests, whether submitted in-app or by email, are processed within <b>30 days</b> of
+        verification. Your account is deactivated and inaccessible immediately upon request; the deletion process
+        removes underlying data within that 30-day window, except the legally-retained records listed above.</p>
+    </div>
+
+    <div class="da-card">
+      <h2><i data-lucide="help-circle"></i> Questions</h2>
+      <p>For any questions about this process or your data, contact us at <a
+          href="mailto:support@load24.in">support@load24.in</a>.</p>
+    </div>
+  </main>
+
+  <footer id="contact">
+    <div class="wrap">
+      <div class="foot-bottom">
+        <span>© 2026 LOAD24. All rights reserved.</span>
+        <span><a href="https://load24.in/">Back to load24.in</a></span>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    lucide.createIcons();
+    const darkToggle = document.getElementById('darkToggle');
+    darkToggle.addEventListener('click', () => {
+      document.body.classList.toggle('dark');
+      const isDark = document.body.classList.contains('dark');
+      darkToggle.innerHTML = isDark ? '<i data-lucide="sun" style="width:18px;height:18px;"></i>' : '<i data-lucide="moon" style="width:18px;height:18px;"></i>';
+      lucide.createIcons();
+    });
+  </script>
+</body>
+
+</html>
