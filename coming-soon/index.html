@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Coming Soon — LOAD24</title>
+  <meta name="robots" content="noindex" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  <link rel="stylesheet" href="../css/app-theme.css" />
+  <style>
+    .cs-wrap { max-width: 480px; margin: 0 auto; padding: 90px 20px; text-align: center; }
+    .cs-icon { width: 72px; height: 72px; border-radius: 999px; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; }
+    .cs-wrap h1 { font-size: 21px; margin: 0 0 8px; }
+    .cs-wrap p { color: var(--slate); font-size: 14px; margin: 0 0 24px; }
+  </style>
+</head>
+
+<body class="app-theme">
+  <header class="app-nav" id="siteNav">
+    <div class="wrap app-nav-inner">
+      <a href="/" class="app-logo"><i data-lucide="truck" style="width:20px;height:20px;color:#f97316;"></i>LOAD<span>24</span></a>
+      <nav class="app-nav-links">
+        <a href="/">Home</a>
+        <a href="/find-loads/">Find Loads</a>
+        <a href="/post-load/">Post Load</a>
+        <a href="/support/">Support</a>
+        <a href="/profile/">Profile</a>
+      </nav>
+      <div class="app-nav-actions">
+        <a href="https://play.google.com/store/apps/details?id=com.base699327bbace8d2c0b141d1bc.app" class="btn btn-brand btn-sm"><i data-lucide="smartphone" style="width:15px;height:15px;"></i> Get the App</a>
+        <button class="app-burger" id="burgerBtn" aria-label="Open menu"><i data-lucide="menu"></i></button>
+      </div>
+    </div>
+    <div class="app-mobile-menu" id="mobileMenu">
+      <a href="/">Home</a>
+      <a href="/find-loads/">Find Loads</a>
+      <a href="/post-load/">Post Load</a>
+      <a href="/support/">Support</a>
+      <a href="/profile/">Profile</a>
+    </div>
+  </header>
+
+  <main class="cs-wrap">
+    <div class="cs-icon" id="csIcon" style="background:#f0fdf4;"><i data-lucide="line-chart" id="csGlyph" style="width:32px;height:32px;color:#16a34a;"></i></div>
+    <h1 id="csTitle">Profit Calculator</h1>
+    <p id="csDesc">This feature is coming soon.</p>
+    <a href="/profile/" class="btn btn-outline-brand">← Back to Profile</a>
+  </main>
+
+  <footer class="app-footer">
+    <div class="wrap">
+      <div class="foot-top">
+        <a href="/" class="app-logo"><i data-lucide="truck" style="width:20px;height:20px;color:#f97316;"></i>LOAD24.in</a>
+        <div class="badge badge-green">🟢 All India Services</div>
+      </div>
+      <p class="copyright">© 2026 LOAD24. All rights reserved.</p>
+      <div class="foot-links">
+        <a href="/delete-account/">Delete Account</a><span>|</span>
+        <a href="#">Privacy Policy</a><span>|</span>
+        <a href="#">Terms of Service</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    lucide.createIcons();
+    const burgerBtn = document.getElementById('burgerBtn');
+    const mobileMenu = document.getElementById('mobileMenu');
+    burgerBtn.addEventListener('click', () => {
+      mobileMenu.classList.toggle('open');
+      burgerBtn.innerHTML = mobileMenu.classList.contains('open') ? '<i data-lucide="x"></i>' : '<i data-lucide="menu"></i>';
+      lucide.createIcons();
+    });
+
+    const FEATURES = {
+      profit: { title: 'Profit Calculator', icon: 'line-chart', bg: '#f0fdf4', color: '#16a34a' },
+      forecast: { title: 'Financial Forecast', icon: 'trending-up', bg: '#eff6ff', color: '#2563eb' },
+      chat: { title: 'Support Chat', icon: 'message-circle', bg: '#f0fdf4', color: '#16a34a' }
+    };
+    const params = new URLSearchParams(location.search);
+    const feature = FEATURES[params.get('f')] || FEATURES.profit;
+    document.getElementById('csTitle').textContent = feature.title;
+    document.getElementById('csGlyph').setAttribute('data-lucide', feature.icon);
+    document.getElementById('csIcon').style.background = feature.bg;
+    document.getElementById('csGlyph').style.color = feature.color;
+    lucide.createIcons();
+  </script>
+</body>
+
+</html>

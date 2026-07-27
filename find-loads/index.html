@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Find Loads — LOAD24</title>
+  <meta name="description" content="Browse active loads posted by shippers and transporters on LOAD24, filter by truck type, pincode or material, and tap Like to show interest." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  <link rel="stylesheet" href="../css/app-theme.css" />
+  <style>
+    .fl-wrap { max-width: 900px; margin: 0 auto; padding: 32px 20px 64px; }
+    .fl-title { font-size: 24px; margin: 0 0 4px; }
+    .fl-sub { color: var(--slate); font-size: 14px; margin: 0 0 22px; }
+    .fl-filters { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 22px; }
+    .fl-filters input, .fl-filters select { flex: 1; min-width: 160px; }
+    .demo-note { background: #fff7ed; border: 1px solid #fed7aa; border-radius: 12px; padding: 12px 16px; font-size: 13px; color: #9a3412; margin-bottom: 22px; }
+
+    .load-card { border-radius: var(--radius-lg); overflow: hidden; border: 1px solid var(--slate-200); border-left: 4px solid var(--brand); box-shadow: var(--shadow-soft); margin-bottom: 18px; background: #fff; }
+    .load-route { background: #fff7ed; padding: 14px 18px; display: flex; align-items: center; justify-content: space-between; gap: 14px; }
+    .load-route .pt { flex: 1; min-width: 0; }
+    .load-route .pt.to { text-align: right; }
+    .load-route .pt .lbl { font-size: 11px; color: var(--slate); display: flex; align-items: center; gap: 4px; }
+    .load-route .pt.to .lbl { justify-content: flex-end; }
+    .load-route .pt .city { font-weight: 700; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .load-body { padding: 16px 18px; }
+    .load-details { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+    .load-details .dt { flex: 1; display: flex; align-items: center; gap: 8px; }
+    .load-details .dt .lbl { font-size: 11px; color: var(--slate); }
+    .load-details .dt .val { font-size: 13.5px; font-weight: 600; }
+    .load-foot { display: flex; align-items: center; justify-content: space-between; border-top: 1px solid var(--slate-100); margin-top: 4px; padding-top: 14px; }
+    .load-foot .price-lbl { font-size: 11px; color: var(--slate); }
+    .load-foot .price { font-size: 22px; font-weight: 800; color: #16a34a; }
+    .load-foot .date { font-size: 11px; color: var(--slate-light); display: flex; align-items: center; gap: 4px; margin-top: 2px; }
+    .like-btn { display: flex; align-items: center; gap: 6px; background: var(--brand); color: #fff; padding: 12px 20px; border-radius: 12px; border: none; font-weight: 700; font-size: 14px; cursor: pointer; }
+    .like-btn.liked { background: #dc2626; }
+    .empty-state { text-align: center; color: var(--slate-light); padding: 50px 0; }
+  </style>
+</head>
+
+<body class="app-theme">
+  <header class="app-nav" id="siteNav">
+    <div class="wrap app-nav-inner">
+      <a href="/" class="app-logo"><i data-lucide="truck" style="width:20px;height:20px;color:#f97316;"></i>LOAD<span>24</span></a>
+      <nav class="app-nav-links">
+        <a href="/">Home</a>
+        <a href="/find-loads/" class="active">Find Loads</a>
+        <a href="/post-load/">Post Load</a>
+        <a href="/support/">Support</a>
+        <a href="/profile/">Profile</a>
+      </nav>
+      <div class="app-nav-actions">
+        <a href="https://play.google.com/store/apps/details?id=com.base699327bbace8d2c0b141d1bc.app" class="btn btn-brand btn-sm"><i data-lucide="smartphone" style="width:15px;height:15px;"></i> Get the App</a>
+        <button class="app-burger" id="burgerBtn" aria-label="Open menu"><i data-lucide="menu"></i></button>
+      </div>
+    </div>
+    <div class="app-mobile-menu" id="mobileMenu">
+      <a href="/">Home</a>
+      <a href="/find-loads/">Find Loads</a>
+      <a href="/post-load/">Post Load</a>
+      <a href="/support/">Support</a>
+      <a href="/profile/">Profile</a>
+    </div>
+  </header>
+
+  <main class="fl-wrap">
+    <h1 class="fl-title">Find Loads</h1>
+    <p class="fl-sub">Browse loads posted by shippers and transporters near you.</p>
+
+    <div class="demo-note"><i data-lucide="info" style="width:14px;height:14px;vertical-align:-2px;"></i>
+      This is a sample of what's on the marketplace. Sign in via the LOAD24 app to see live loads and tap Like to show interest.</div>
+
+    <div class="fl-filters">
+      <input type="text" id="pincodeInput" placeholder="Search by pincode" />
+      <input type="text" id="materialInput" placeholder="Material" />
+      <select id="truckSelect"></select>
+    </div>
+
+    <div id="loadsList"></div>
+    <div id="emptyState" class="empty-state" style="display:none;">No matching loads. Try a different filter.</div>
+  </main>
+
+  <footer class="app-footer">
+    <div class="wrap">
+      <div class="foot-top">
+        <a href="/" class="app-logo"><i data-lucide="truck" style="width:20px;height:20px;color:#f97316;"></i>LOAD24.in</a>
+        <div class="badge badge-green">🟢 All India Services</div>
+      </div>
+      <p class="copyright">© 2026 LOAD24. All rights reserved.</p>
+      <div class="foot-links">
+        <a href="/delete-account/">Delete Account</a><span>|</span>
+        <a href="#">Privacy Policy</a><span>|</span>
+        <a href="#">Terms of Service</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    lucide.createIcons();
+    const burgerBtn = document.getElementById('burgerBtn');
+    const mobileMenu = document.getElementById('mobileMenu');
+    burgerBtn.addEventListener('click', () => {
+      mobileMenu.classList.toggle('open');
+      burgerBtn.innerHTML = mobileMenu.classList.contains('open') ? '<i data-lucide="x"></i>' : '<i data-lucide="menu"></i>';
+      lucide.createIcons();
+    });
+
+    // Same enum PostLoadScreen posts with — apps/mobile/lib/loadOptions.js
+    const TRUCK_TYPE_LABELS = {
+      mahindra_pickup: 'Mahindra Pickup', tata_407: 'Tata 407', tata_ace: 'Tata Ace',
+      chota_hathi: 'Chota Hathi', four_vehicle_loader: '4-Wheeler Loader', eicher_truck: 'Eicher Truck',
+      ashok_leyland: 'Ashok Leyland', lcv: 'LCV', lgv: 'LGV', open_body: 'Open Body',
+      closed_body: 'Closed Body', container: 'Container', trailer: 'Trailer', tanker: 'Tanker',
+      tipper: 'Tipper', flatbed: 'Flatbed', car_carrier: 'Car Carrier'
+    };
+
+    const SAMPLE_LOADS = [
+      { id: 1, loading_city: 'Mumbai', loading_pincode: '400001', unloading_city: 'Pune', unloading_pincode: '411001', material_type: 'Cement', weight_tons: 9, bhada_price: 18500, required_truck_type: 'tata_407', loading_date: '2026-08-02' },
+      { id: 2, loading_city: 'Nagpur', loading_pincode: '440001', unloading_city: 'Ahmedabad', unloading_pincode: '380001', material_type: 'Cotton Bales', weight_tons: 14, bhada_price: 42000, required_truck_type: 'container', loading_date: '2026-08-03' },
+      { id: 3, loading_city: 'Delhi', loading_pincode: '110001', unloading_city: 'Jaipur', unloading_pincode: '302001', material_type: 'Steel Coils', weight_tons: 18, bhada_price: 35000, required_truck_type: 'trailer', loading_date: '2026-08-04' },
+      { id: 4, loading_city: 'Surat', loading_pincode: '395001', unloading_city: 'Indore', unloading_pincode: '452001', material_type: 'Textiles', weight_tons: 4, bhada_price: 12500, required_truck_type: 'tata_ace', loading_date: '2026-08-05' },
+      { id: 5, loading_city: 'Bengaluru', loading_pincode: '560001', unloading_city: 'Chennai', unloading_pincode: '600001', material_type: 'Electronics', weight_tons: 6, bhada_price: 21000, required_truck_type: 'closed_body', loading_date: '2026-08-06' }
+    ];
+
+    const truckSelect = document.getElementById('truckSelect');
+    truckSelect.innerHTML = '<option value="all">All Trucks</option>' + Object.entries(TRUCK_TYPE_LABELS).map(([k, v]) => `<option value="${k}">${v}</option>`).join('');
+
+    const liked = new Set();
+
+    function formatDate(dateStr) {
+      const d = new Date(dateStr);
+      return d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
+    }
+
+    function render() {
+      const pincode = document.getElementById('pincodeInput').value.trim();
+      const material = document.getElementById('materialInput').value.trim().toLowerCase();
+      const truckType = truckSelect.value;
+
+      const filtered = SAMPLE_LOADS.filter((l) => {
+        if (pincode && !(l.loading_pincode.includes(pincode) || l.unloading_pincode.includes(pincode))) return false;
+        if (material && !l.material_type.toLowerCase().includes(material)) return false;
+        if (truckType !== 'all' && l.required_truck_type !== truckType) return false;
+        return true;
+      });
+
+      const list = document.getElementById('loadsList');
+      const empty = document.getElementById('emptyState');
+      empty.style.display = filtered.length ? 'none' : 'block';
+
+      list.innerHTML = filtered.map((l) => `
+        <div class="load-card">
+          <div class="load-route">
+            <div class="pt">
+              <div class="lbl"><i data-lucide="map-pin" style="width:11px;height:11px;color:#16a34a;"></i> From</div>
+              <div class="city">${l.loading_city}</div>
+            </div>
+            <i data-lucide="arrow-right" style="width:18px;height:18px;color:#f97316;flex-shrink:0;"></i>
+            <div class="pt to">
+              <div class="lbl">To <i data-lucide="map-pin" style="width:11px;height:11px;color:#dc2626;"></i></div>
+              <div class="city">${l.unloading_city}</div>
+            </div>
+          </div>
+          <div class="load-body">
+            <div class="load-details">
+              <div class="dt"><i data-lucide="package" style="width:16px;height:16px;color:#64748b;"></i><div><div class="lbl">Material</div><div class="val">${l.material_type}</div></div></div>
+              <div class="dt"><i data-lucide="weight" style="width:16px;height:16px;color:#64748b;"></i><div><div class="lbl">Weight</div><div class="val">${l.weight_tons} Tons</div></div></div>
+            </div>
+            <div class="load-details" style="margin-bottom:0;">
+              <div class="dt"><i data-lucide="truck" style="width:16px;height:16px;color:#64748b;"></i><div><div class="lbl">Truck Type</div><div class="val">${TRUCK_TYPE_LABELS[l.required_truck_type] ?? l.required_truck_type}</div></div></div>
+              <div class="dt"><i data-lucide="fuel" style="width:16px;height:16px;color:#64748b;"></i><div><div class="lbl">Fuel</div><div class="val">Any</div></div></div>
+            </div>
+            <div class="load-foot">
+              <div>
+                <div class="price-lbl">Price</div>
+                <div class="price">₹${l.bhada_price.toLocaleString('en-IN')}</div>
+                <div class="date"><i data-lucide="calendar" style="width:11px;height:11px;"></i> ${formatDate(l.loading_date)}</div>
+              </div>
+              <button class="like-btn ${liked.has(l.id) ? 'liked' : ''}" data-id="${l.id}">
+                <i data-lucide="heart" style="width:16px;height:16px;${liked.has(l.id) ? 'fill:#fff;' : ''}"></i>
+                ${liked.has(l.id) ? 'Liked' : 'Like'}
+              </button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+
+      lucide.createIcons();
+
+      list.querySelectorAll('.like-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          alert('Sign in via the LOAD24 app to like a load and get connected with our sales team.');
+        });
+      });
+    }
+
+    document.getElementById('pincodeInput').addEventListener('input', render);
+    document.getElementById('materialInput').addEventListener('input', render);
+    truckSelect.addEventListener('change', render);
+    render();
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Profile — LOAD24</title>
+  <meta name="description" content="See what your LOAD24 profile looks like — trust score, deals, ratings, bank details and account settings." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  <link rel="stylesheet" href="../css/app-theme.css" />
+  <style>
+    .pr-wrap { max-width: 640px; margin: 0 auto; padding: 32px 20px 64px; }
+    .demo-note { background: #fff7ed; border: 1px solid #fed7aa; border-radius: 12px; padding: 12px 16px; font-size: 13px; color: #9a3412; margin-bottom: 22px; }
+    .pr-card { background: #fff; border: 1px solid var(--slate-200); border-radius: var(--radius-lg); padding: 22px; margin-bottom: 16px; }
+    .pr-head { display: flex; align-items: center; gap: 16px; }
+    .avatar { width: 64px; height: 64px; border-radius: 999px; background: #ffedd5; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 800; color: var(--brand); flex-shrink: 0; }
+    .pr-name { font-size: 17px; font-weight: 700; margin: 0 0 6px; }
+    .pr-badges { display: flex; flex-wrap: wrap; gap: 8px; }
+    .pill { border: 1px solid var(--slate-200); border-radius: 999px; padding: 4px 12px; font-size: 12px; font-weight: 600; color: #475569; }
+
+    .stat-row { display: flex; margin-top: 20px; text-align: center; }
+    .stat-row > div { flex: 1; }
+    .stat-row b { display: block; font-size: 21px; }
+    .stat-row span { font-size: 11px; color: var(--slate); }
+
+    .info-row { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; font-size: 14px; color: #334155; }
+    .card-title { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+    .card-title .lft { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 15px; }
+    .edit-link { display: flex; align-items: center; gap: 4px; font-size: 13px; font-weight: 600; color: #334155; }
+
+    .nav-row { display: flex; align-items: center; justify-content: space-between; background: #fff; border: 1px solid var(--slate-200); border-radius: var(--radius-md); padding: 16px 18px; margin-bottom: 12px; font-weight: 600; font-size: 14.5px; }
+    .nav-row .lft { display: flex; align-items: center; gap: 12px; }
+    .danger-row { border-color: #fecaca; color: #dc2626; justify-content: center; gap: 8px; }
+  </style>
+</head>
+
+<body class="app-theme">
+  <header class="app-nav" id="siteNav">
+    <div class="wrap app-nav-inner">
+      <a href="/" class="app-logo"><i data-lucide="truck" style="width:20px;height:20px;color:#f97316;"></i>LOAD<span>24</span></a>
+      <nav class="app-nav-links">
+        <a href="/">Home</a>
+        <a href="/find-loads/">Find Loads</a>
+        <a href="/post-load/">Post Load</a>
+        <a href="/support/">Support</a>
+        <a href="/profile/" class="active">Profile</a>
+      </nav>
+      <div class="app-nav-actions">
+        <a href="https://play.google.com/store/apps/details?id=com.base699327bbace8d2c0b141d1bc.app" class="btn btn-brand btn-sm"><i data-lucide="smartphone" style="width:15px;height:15px;"></i> Get the App</a>
+        <button class="app-burger" id="burgerBtn" aria-label="Open menu"><i data-lucide="menu"></i></button>
+      </div>
+    </div>
+    <div class="app-mobile-menu" id="mobileMenu">
+      <a href="/">Home</a>
+      <a href="/find-loads/">Find Loads</a>
+      <a href="/post-load/">Post Load</a>
+      <a href="/support/">Support</a>
+      <a href="/profile/">Profile</a>
+    </div>
+  </header>
+
+  <main class="pr-wrap">
+    <div class="demo-note"><i data-lucide="info" style="width:14px;height:14px;vertical-align:-2px;"></i>
+      This is a preview of the Profile screen. Sign in via the LOAD24 app to see your real profile, deals and ratings.</div>
+
+    <div class="pr-card">
+      <div class="pr-head">
+        <div class="avatar">R</div>
+        <div>
+          <p class="pr-name">Rajesh Kumar</p>
+          <div class="pr-badges">
+            <span class="pill">Transporter</span>
+            <span class="badge badge-green">Verified</span>
+          </div>
+        </div>
+      </div>
+      <div class="stat-row">
+        <div><b style="color:#f97316;">86</b><span>Trust Score</span></div>
+        <div><b style="color:#2563eb;">42</b><span>Total Deals</span></div>
+        <div><b style="color:#16a34a;">39</b><span>Completed</span></div>
+        <div>
+          <div style="display:flex;justify-content:center;gap:1px;">
+            <i data-lucide="star" style="width:14px;height:14px;color:#f97316;fill:#f97316;"></i>
+            <i data-lucide="star" style="width:14px;height:14px;color:#f97316;fill:#f97316;"></i>
+            <i data-lucide="star" style="width:14px;height:14px;color:#f97316;fill:#f97316;"></i>
+            <i data-lucide="star" style="width:14px;height:14px;color:#f97316;fill:#f97316;"></i>
+            <i data-lucide="star" style="width:14px;height:14px;color:#cbd5e1;"></i>
+          </div>
+          <span>4.3 · 39 reviews</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="pr-card">
+      <div class="card-title">
+        <div class="lft"><i data-lucide="user" style="width:18px;height:18px;"></i> Personal Information</div>
+      </div>
+      <div class="info-row"><i data-lucide="phone" style="width:15px;height:15px;color:#94a3b8;"></i> +91 98xxxxxx10</div>
+      <div class="info-row"><i data-lucide="mail" style="width:15px;height:15px;color:#94a3b8;"></i> rajesh@example.com</div>
+      <div class="info-row"><i data-lucide="building-2" style="width:15px;height:15px;color:#94a3b8;"></i> Rajesh Road Carriers</div>
+      <div class="info-row"><i data-lucide="map-pin" style="width:15px;height:15px;color:#94a3b8;"></i> Nagpur, Maharashtra, 440001</div>
+    </div>
+
+    <div class="pr-card">
+      <div class="card-title">
+        <div class="lft"><i data-lucide="landmark" style="width:18px;height:18px;color:#2563eb;"></i> Bank Details</div>
+      </div>
+      <div style="font-size:11px;color:#94a3b8;">Account Holder</div>
+      <div style="font-weight:600;margin-bottom:8px;">Rajesh Kumar</div>
+      <div style="font-size:11px;color:#94a3b8;">Account Number</div>
+      <div style="font-weight:600;margin-bottom:8px;">XXXXXXXX4821</div>
+      <span class="badge badge-green">✅ Bank Verified</span>
+    </div>
+
+    <div class="pr-card">
+      <div class="card-title">
+        <div class="lft"><i data-lucide="message-square" style="width:18px;height:18px;color:#f97316;"></i> Reviews &amp; Ratings</div>
+      </div>
+      <div style="border-top:1px solid #f1f5f9;padding-top:12px;">
+        <div style="display:flex;justify-content:space-between;font-size:13.5px;font-weight:600;">Priya S.<span style="color:#f97316;">★★★★★</span></div>
+        <p style="font-size:13px;color:var(--slate);margin:4px 0 0;">On-time delivery, smooth handover. Would book again.</p>
+      </div>
+    </div>
+
+    <div class="nav-row"><div class="lft"><i data-lucide="line-chart" style="width:18px;height:18px;color:#16a34a;"></i> Profit Calculator</div><a href="/coming-soon/?f=profit"><i data-lucide="chevron-right" style="width:18px;height:18px;color:#94a3b8;"></i></a></div>
+    <div class="nav-row"><div class="lft"><i data-lucide="trending-up" style="width:18px;height:18px;color:#2563eb;"></i> Financial Forecast</div><a href="/coming-soon/?f=forecast"><i data-lucide="chevron-right" style="width:18px;height:18px;color:#94a3b8;"></i></a></div>
+    <div class="nav-row"><div class="lft"><i data-lucide="shield-check" style="width:18px;height:18px;color:#2563eb;"></i> KYC Verification</div><a href="https://play.google.com/store/apps/details?id=com.base699327bbace8d2c0b141d1bc.app"><i data-lucide="chevron-right" style="width:18px;height:18px;color:#94a3b8;"></i></a></div>
+    <div class="nav-row"><div class="lft"><i data-lucide="file-text" style="width:18px;height:18px;color:#7c3aed;"></i> Support Tickets</div><a href="/support/"><i data-lucide="chevron-right" style="width:18px;height:18px;color:#94a3b8;"></i></a></div>
+    <div class="nav-row"><div class="lft"><i data-lucide="lock" style="width:18px;height:18px;color:#ea580c;"></i> MPIN Settings</div><a href="https://play.google.com/store/apps/details?id=com.base699327bbace8d2c0b141d1bc.app"><i data-lucide="chevron-right" style="width:18px;height:18px;color:#94a3b8;"></i></a></div>
+
+    <div class="nav-row danger-row"><i data-lucide="trash-2" style="width:16px;height:16px;"></i> <a href="/delete-account/" style="color:#dc2626;">Delete Account</a></div>
+  </main>
+
+  <footer class="app-footer">
+    <div class="wrap">
+      <div class="foot-top">
+        <a href="/" class="app-logo"><i data-lucide="truck" style="width:20px;height:20px;color:#f97316;"></i>LOAD24.in</a>
+        <div class="badge badge-green">🟢 All India Services</div>
+      </div>
+      <p class="copyright">© 2026 LOAD24. All rights reserved.</p>
+      <div class="foot-links">
+        <a href="/delete-account/">Delete Account</a><span>|</span>
+        <a href="#">Privacy Policy</a><span>|</span>
+        <a href="#">Terms of Service</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    lucide.createIcons();
+    const burgerBtn = document.getElementById('burgerBtn');
+    const mobileMenu = document.getElementById('mobileMenu');
+    burgerBtn.addEventListener('click', () => {
+      mobileMenu.classList.toggle('open');
+      burgerBtn.innerHTML = mobileMenu.classList.contains('open') ? '<i data-lucide="x"></i>' : '<i data-lucide="menu"></i>';
+      lucide.createIcons();
+    });
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Support — LOAD24</title>
+  <meta name="description" content="Get help from LOAD24 — raise a support ticket, call our sales team, or chat with us." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  <link rel="stylesheet" href="../css/app-theme.css" />
+  <style>
+    .sp-wrap { max-width: 640px; margin: 0 auto; padding: 32px 20px 0; }
+    .sp-title { font-size: 24px; margin: 0 0 4px; }
+    .sp-sub { color: var(--slate); font-size: 14px; margin: 0 0 22px; }
+    .sp-card { background: #fff; border: 1px solid var(--slate-200); border-radius: var(--radius-lg); padding: 24px; margin-bottom: 16px; }
+    .quick-actions { display: flex; gap: 12px; margin-bottom: 22px; }
+    .quick-actions a { flex: 1; text-align: center; padding: 16px 10px; border-radius: var(--radius-md); font-weight: 700; font-size: 13.5px; border: 1px solid var(--slate-200); color: #334155; }
+    .quick-actions a i { display: block; margin: 0 auto 8px; }
+    .quick-actions a.call { background: #166534; color: #fff; border: none; }
+    .support-band { background: linear-gradient(135deg,#16a34a,#15803d); text-align: center; padding: 48px 20px; color: #fff; margin-top: 32px; }
+    .support-band .btns { max-width: 380px; margin: 20px auto 0; display: flex; flex-direction: column; gap: 12px; }
+  </style>
+</head>
+
+<body class="app-theme">
+  <header class="app-nav" id="siteNav">
+    <div class="wrap app-nav-inner">
+      <a href="/" class="app-logo"><i data-lucide="truck" style="width:20px;height:20px;color:#f97316;"></i>LOAD<span>24</span></a>
+      <nav class="app-nav-links">
+        <a href="/">Home</a>
+        <a href="/find-loads/">Find Loads</a>
+        <a href="/post-load/">Post Load</a>
+        <a href="/support/" class="active">Support</a>
+        <a href="/profile/">Profile</a>
+      </nav>
+      <div class="app-nav-actions">
+        <a href="https://play.google.com/store/apps/details?id=com.base699327bbace8d2c0b141d1bc.app" class="btn btn-brand btn-sm"><i data-lucide="smartphone" style="width:15px;height:15px;"></i> Get the App</a>
+        <button class="app-burger" id="burgerBtn" aria-label="Open menu"><i data-lucide="menu"></i></button>
+      </div>
+    </div>
+    <div class="app-mobile-menu" id="mobileMenu">
+      <a href="/">Home</a>
+      <a href="/find-loads/">Find Loads</a>
+      <a href="/post-load/">Post Load</a>
+      <a href="/support/">Support</a>
+      <a href="/profile/">Profile</a>
+    </div>
+  </header>
+
+  <main class="sp-wrap">
+    <h1 class="sp-title">Support</h1>
+    <p class="sp-sub">Raise a ticket, call our sales team, or reach us on WhatsApp — we support Hindi &amp; English, 24/7.</p>
+
+    <div class="quick-actions">
+      <a href="tel:" class="call"><i data-lucide="phone" style="width:20px;height:20px;"></i> Call Sales Team</a>
+      <a href="https://wa.me/919555921555?text=Hi%20LOAD24%2C%20I%27d%20like%20some%20help" target="_blank" rel="noopener"><i data-lucide="message-circle" style="width:20px;height:20px;color:#16a34a;"></i> WhatsApp</a>
+      <a href="mailto:support@load24.in"><i data-lucide="mail" style="width:20px;height:20px;color:#2563eb;"></i> Email</a>
+    </div>
+
+    <div class="sp-card">
+      <h3 style="margin:0 0 4px;font-size:16px;">Raise a support ticket</h3>
+      <p style="font-size:13px;color:var(--slate);margin:0 0 16px;">Tell us the issue — this sends straight to our support inbox.</p>
+      <form id="ticketForm">
+        <div class="field"><label>Subject</label><input type="text" id="subject" required /></div>
+        <div class="field"><label>Message</label><textarea id="message" rows="4" required></textarea></div>
+        <div class="field"><label>Registered mobile number</label><input type="tel" id="mobile" placeholder="Optional, helps us find your account" /></div>
+        <button type="submit" class="btn btn-brand btn-block"><i data-lucide="send" style="width:15px;height:15px;"></i> Submit Ticket</button>
+      </form>
+    </div>
+  </main>
+
+  <section class="support-band">
+    <div class="badge" style="background:rgba(255,255,255,.2);color:#fff;">🟢 All India Services</div>
+    <h2 style="font-size:20px;margin:14px 0 0;">Still need help?</h2>
+    <p style="font-size:13px;opacity:.9;margin:6px 0 0;">Our sales &amp; support team responds in Hindi and English, around the clock.</p>
+  </section>
+
+  <footer class="app-footer">
+    <div class="wrap">
+      <div class="foot-top">
+        <a href="/" class="app-logo"><i data-lucide="truck" style="width:20px;height:20px;color:#f97316;"></i>LOAD24.in</a>
+        <div class="badge badge-green">🟢 All India Services</div>
+      </div>
+      <p class="copyright">© 2026 LOAD24. All rights reserved.</p>
+      <div class="foot-links">
+        <a href="/delete-account/">Delete Account</a><span>|</span>
+        <a href="#">Privacy Policy</a><span>|</span>
+        <a href="#">Terms of Service</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    lucide.createIcons();
+    const burgerBtn = document.getElementById('burgerBtn');
+    const mobileMenu = document.getElementById('mobileMenu');
+    burgerBtn.addEventListener('click', () => {
+      mobileMenu.classList.toggle('open');
+      burgerBtn.innerHTML = mobileMenu.classList.contains('open') ? '<i data-lucide="x"></i>' : '<i data-lucide="menu"></i>';
+      lucide.createIcons();
+    });
+
+    document.getElementById('ticketForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const subject = encodeURIComponent(document.getElementById('subject').value);
+      const body = encodeURIComponent(
+        document.getElementById('message').value + '\n\nRegistered mobile: ' + (document.getElementById('mobile').value || 'N/A')
+      );
+      window.location.href = `mailto:support@load24.in?subject=${subject}&body=${body}`;
+    });
+  </script>
+</body>
+
+</html>
