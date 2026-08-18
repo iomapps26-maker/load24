@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Notifications — LOAD24 Admin</title>
+  <meta name="robots" content="noindex, nofollow" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  <link rel="stylesheet" href="../../css/app-theme.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="../js/admin-shared.js"></script>
+  <style>
+    .app-nav-links { flex-wrap: wrap; row-gap: 6px; }
+
+    .admin-wrap { max-width: 1080px; margin: 0 auto; padding: 48px 20px 80px; }
+    .admin-wrap h1 { font-size: 26px; margin: 0 0 8px; }
+    .admin-wrap p.sub { color: var(--slate); font-size: 14.5px; margin: 0 0 24px; }
+
+    .notif-tabs { display: flex; gap: 8px; margin-bottom: 20px; border-bottom: 1px solid var(--slate-200); }
+    .notif-tab {
+      padding: 10px 18px; font-weight: 700; font-size: 14px; color: var(--slate);
+      border-bottom: 2px solid transparent; cursor: pointer; background: none; border-top: none; border-left: none; border-right: none;
+    }
+    .notif-tab.active { color: var(--brand); border-bottom-color: var(--brand); }
+
+    .admin-error {
+      background: #fee2e2; color: #b91c1c; font-size: 13.5px; font-weight: 600;
+      padding: 14px 16px; border-radius: 12px; margin-bottom: 20px; line-height: 1.5;
+    }
+    .admin-loading, .admin-empty {
+      text-align: center; color: var(--slate); font-size: 14px; padding: 60px 20px;
+      background: var(--slate-50); border-radius: var(--radius-md);
+    }
+
+    .notif-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+    .notif-toolbar select {
+      font-family: inherit; font-size: 13.5px; padding: 8px 12px; border: 1.5px solid var(--slate-200);
+      border-radius: 10px; background: #fff; color: var(--ink);
+    }
+
+    .tpl-editor {
+      background: var(--white); border: 1px solid var(--slate-200); border-radius: var(--radius-md);
+      box-shadow: var(--shadow-soft); padding: 22px; margin-bottom: 20px;
+    }
+    .tpl-editor h2 { font-size: 17px; margin: 0 0 4px; }
+    .tpl-editor p.hint { color: var(--slate); font-size: 12.5px; margin: 0 0 16px; }
+    .tpl-editor .field-row { display: flex; gap: 14px; }
+    .tpl-editor .field { margin-bottom: 14px; flex: 1; }
+    .tpl-editor textarea { min-height: 90px; resize: vertical; }
+    .tpl-editor .actions { display: flex; gap: 10px; margin-top: 4px; }
+
+    .tpl-table-wrap, .log-table-wrap {
+      overflow-x: auto; background: var(--white); border: 1px solid var(--slate-200);
+      border-radius: var(--radius-md); box-shadow: var(--shadow-soft);
+    }
+    table.tpl-table, table.log-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+    table.tpl-table th, table.log-table th {
+      text-align: left; background: var(--slate-50); color: var(--ink); font-weight: 700;
+      padding: 12px 14px; border-bottom: 2px solid var(--slate-200); white-space: nowrap;
+    }
+    table.tpl-table td, table.log-table td { padding: 12px 14px; border-bottom: 1px solid var(--slate-200); color: var(--slate); vertical-align: top; }
+    table.tpl-table tr:last-child > td, table.log-table tr:last-child > td { border-bottom: none; }
+    table.tpl-table td.strong, table.log-table td.strong { color: var(--ink); font-weight: 600; }
+    .tpl-body-preview { max-width: 320px; white-space: pre-wrap; font-family: monospace; font-size: 12px; }
+
+    .notif-pagination { display: flex; align-items: center; justify-content: center; gap: 14px; margin-top: 18px; font-size: 13.5px; color: var(--slate); }
+  </style>
+</head>
+
+<body class="app-theme">
+  <header class="app-nav" id="siteNav">
+    <div class="wrap app-nav-inner">
+      <a href="/admin/" class="app-logo">
+        <i data-lucide="shield-check" style="width:20px;height:20px;color:#f97316;"></i>LOAD<span>24</span>
+        <span style="color:#94a3b8;font-weight:600;font-size:13px;margin-left:4px;">Admin</span>
+      </a>
+      <nav class="app-nav-links">
+        <a href="/admin/">Dashboard</a>
+        <a href="/admin/kyc/">KYC Queue</a>
+        <a href="/admin/trucks/">Truck KYC</a>
+        <a href="/admin/withdrawals/">Withdrawals</a>
+        <a href="/admin/moderation/">Moderation</a>
+        <a href="/admin/trips/">Trips</a>
+        <a href="/admin/notifications/" class="active">Notifications</a>
+        <a href="/admin/users/">Users</a>
+        <a href="/admin/risk/">Risk</a>
+        <a href="/admin/content/">Content</a>
+        <a href="/admin/master-data/">Master Data</a>
+        <a href="/admin/audit-log/">Audit Log</a>
+      </nav>
+      <div class="app-nav-actions">
+        <span id="staffEmail" style="color:#94a3b8;font-size:13px;"></span>
+        <button class="btn btn-ghost-white btn-sm" id="signOutBtn"><i data-lucide="log-out" style="width:15px;height:15px;"></i> Sign Out</button>
+        <button class="app-burger" id="burgerBtn" aria-label="Open menu"><i data-lucide="menu"></i></button>
+      </div>
+    </div>
+    <div class="app-mobile-menu" id="mobileMenu">
+      <a href="/admin/">Dashboard</a>
+      <a href="/admin/kyc/">KYC Queue</a>
+      <a href="/admin/trucks/">Truck KYC</a>
+      <a href="/admin/withdrawals/">Withdrawals</a>
+      <a href="/admin/moderation/">Moderation</a>
+      <a href="/admin/trips/">Trips</a>
+      <a href="/admin/notifications/">Notifications</a>
+      <a href="/admin/users/">Users</a>
+      <a href="/admin/risk/">Risk</a>
+      <a href="/admin/content/">Content</a>
+      <a href="/admin/master-data/">Master Data</a>
+      <a href="/admin/audit-log/">Audit Log</a>
+    </div>
+  </header>
+
+  <main class="admin-wrap">
+    <h1>Notifications</h1>
+    <p class="sub">Manage notification templates and review what's actually been sent.</p>
+
+    <div class="notif-tabs">
+      <button class="notif-tab active" data-tab="templates">Templates</button>
+      <button class="notif-tab" data-tab="log">Log</button>
+    </div>
+
+    <!-- Templates tab -->
+    <div id="templatesPanel">
+      <div class="notif-toolbar">
+        <span style="font-size:12.5px;color:var(--slate);">Not yet wired into src/lib/notify.js's send calls — this is template management only.</span>
+        <button class="btn btn-brand btn-sm" id="newTemplateBtn"><i data-lucide="plus" style="width:14px;height:14px;"></i> New Template</button>
+      </div>
+
+      <div class="tpl-editor" id="tplEditor" hidden>
+        <h2 id="tplEditorTitle">New Template</h2>
+        <p class="hint">Use <code>{{variable}}</code> placeholders in subject/body — e.g. <code>Hi {{name}}, your KYC is {{status}}</code>.</p>
+        <div class="field-row">
+          <div class="field">
+            <label>Channel</label>
+            <select id="tplChannel">
+              <option value="push">Push</option>
+              <option value="email">Email</option>
+              <option value="whatsapp">WhatsApp</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Event key</label>
+            <input type="text" id="tplEventKey" placeholder="e.g. kyc_verified" />
+          </div>
+        </div>
+        <div class="field">
+          <label>Subject (optional)</label>
+          <input type="text" id="tplSubject" />
+        </div>
+        <div class="field">
+          <label>Body</label>
+          <textarea id="tplBody"></textarea>
+        </div>
+        <div id="tplEditorError" class="admin-error" hidden></div>
+        <div class="actions">
+          <button class="btn btn-outline-slate btn-sm" id="tplCancelBtn">Cancel</button>
+          <button class="btn btn-brand btn-sm" id="tplSaveBtn">Save Template</button>
+        </div>
+      </div>
+
+      <div id="tplError" class="admin-error" hidden></div>
+      <div id="tplLoading" class="admin-loading">Loading templates…</div>
+      <div id="tplEmpty" class="admin-empty" hidden>No templates yet — create one above.</div>
+      <div id="tplTableWrap" class="tpl-table-wrap" hidden>
+        <table class="tpl-table">
+          <thead><tr><th>Channel</th><th>Event key</th><th>Subject</th><th>Body</th><th></th></tr></thead>
+          <tbody id="tplTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Log tab -->
+    <div id="logPanel" hidden>
+      <div class="notif-toolbar">
+        <select id="logTypeFilter">
+          <option value="">All types</option>
+        </select>
+      </div>
+      <div id="logError" class="admin-error" hidden></div>
+      <div id="logLoading" class="admin-loading">Loading log…</div>
+      <div id="logEmpty" class="admin-empty" hidden>Nothing sent yet.</div>
+      <div id="logTableWrap" class="log-table-wrap" hidden>
+        <table class="log-table">
+          <thead><tr><th>Recipient</th><th>Type</th><th>Title</th><th>Body</th><th>Read?</th><th>Sent</th></tr></thead>
+          <tbody id="logTableBody"></tbody>
+        </table>
+      </div>
+      <div id="logPagination" class="notif-pagination" hidden></div>
+    </div>
+  </main>
+
+  <footer class="app-footer">
+    <div class="wrap">
+      <div class="foot-top">
+        <a href="/" class="app-logo"><i data-lucide="truck" style="width:20px;height:20px;color:#f97316;"></i>LOAD24.in</a>
+        <div class="badge badge-green">🟢 All India Services</div>
+      </div>
+      <p class="copyright">© 2026 LOAD24. All rights reserved.</p>
+      <div class="foot-links">
+        <a href="/delete-account/">Delete Account</a><span>|</span>
+        <a href="/PrivacyPolicy/">Privacy Policy</a><span>|</span>
+        <a href="/">Main Site</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // ---------- Templates ----------
+    let editingTemplateId = null;
+
+    const tplEditor = document.getElementById('tplEditor');
+    const tplEditorTitle = document.getElementById('tplEditorTitle');
+    const tplChannel = document.getElementById('tplChannel');
+    const tplEventKey = document.getElementById('tplEventKey');
+    const tplSubject = document.getElementById('tplSubject');
+    const tplBody = document.getElementById('tplBody');
+    const tplEditorError = document.getElementById('tplEditorError');
+    const tplError = document.getElementById('tplError');
+    const tplLoading = document.getElementById('tplLoading');
+    const tplEmpty = document.getElementById('tplEmpty');
+    const tplTableWrap = document.getElementById('tplTableWrap');
+    const tplTableBody = document.getElementById('tplTableBody');
+
+    function openEditor(template) {
+      editingTemplateId = template ? template.id : null;
+      tplEditorTitle.textContent = template ? 'Edit Template' : 'New Template';
+      tplChannel.value = template?.channel || 'push';
+      tplEventKey.value = template?.event_key || '';
+      tplSubject.value = template?.subject || '';
+      tplBody.value = template?.body || '';
+      tplEditorError.hidden = true;
+      tplEditor.hidden = false;
+      tplEditor.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+    function closeEditor() {
+      editingTemplateId = null;
+      tplEditor.hidden = true;
+    }
+
+    function renderTemplateRow(t) {
+      return `
+        <tr data-id="${escapeHtml(t.id)}">
+          <td><span class="badge badge-slate">${escapeHtml(titleCase(t.channel))}</span></td>
+          <td class="strong">${escapeHtml(t.event_key)}</td>
+          <td>${escapeHtml(t.subject || '—')}</td>
+          <td class="tpl-body-preview">${escapeHtml(t.body)}</td>
+          <td>
+            <div style="display:flex;gap:6px;">
+              <button class="btn btn-outline-slate btn-sm" data-action="edit">Edit</button>
+              <button class="btn btn-outline-slate btn-sm" style="color:#dc2626;border-color:#fecaca;" data-action="delete">Delete</button>
+            </div>
+          </td>
+        </tr>`;
+    }
+
+    let templatesData = [];
+
+    async function loadTemplates() {
+      tplLoading.hidden = false;
+      tplError.hidden = true;
+      tplEmpty.hidden = true;
+      tplTableWrap.hidden = true;
+      try {
+        const res = await adminApiFetch('/api/admin/notification-templates');
+        if (res.status === 403) throw new Error(NO_STAFF_ROLE_MESSAGE);
+        const body = await res.json();
+        if (!res.ok) throw new Error(body.error || `Request failed (${res.status})`);
+
+        templatesData = body;
+        tplLoading.hidden = true;
+        if (!body.length) {
+          tplEmpty.hidden = false;
+          return;
+        }
+        tplTableBody.innerHTML = body.map(renderTemplateRow).join('');
+        tplTableWrap.hidden = false;
+      } catch (err) {
+        tplLoading.hidden = true;
+        tplError.textContent = err.message;
+        tplError.hidden = false;
+      }
+    }
+
+    document.getElementById('newTemplateBtn').addEventListener('click', () => openEditor(null));
+    document.getElementById('tplCancelBtn').addEventListener('click', closeEditor);
+
+    document.getElementById('tplSaveBtn').addEventListener('click', async () => {
+      const payload = {
+        channel: tplChannel.value,
+        event_key: tplEventKey.value.trim(),
+        subject: tplSubject.value.trim() || null,
+        body: tplBody.value.trim()
+      };
+      tplEditorError.hidden = true;
+      try {
+        const path = editingTemplateId ? `/api/admin/notification-templates/${editingTemplateId}` : '/api/admin/notification-templates';
+        const res = await adminApiFetch(path, { method: editingTemplateId ? 'PATCH' : 'POST', body: JSON.stringify(payload) });
+        const body = await res.json();
+        if (!res.ok) throw new Error(body.error || 'Could not save this template');
+        closeEditor();
+        await loadTemplates();
+      } catch (err) {
+        tplEditorError.textContent = err.message;
+        tplEditorError.hidden = false;
+      }
+    });
+
+    tplTableBody.addEventListener('click', async (e) => {
+      const btn = e.target.closest('button[data-action]');
+      if (!btn) return;
+      const id = btn.closest('tr').dataset.id;
+      const action = btn.dataset.action;
+
+      if (action === 'edit') {
+        openEditor(templatesData.find((t) => t.id === id));
+        return;
+      }
+      if (action === 'delete') {
+        if (!confirm('Delete this template? This cannot be undone.')) return;
+        btn.disabled = true;
+        try {
+          const res = await adminApiFetch(`/api/admin/notification-templates/${id}`, { method: 'DELETE' });
+          if (!res.ok && res.status !== 204) {
+            const body = await res.json().catch(() => ({}));
+            throw new Error(body.error || 'Could not delete this template');
+          }
+          await loadTemplates();
+        } catch (err) {
+          btn.disabled = false;
+          alert(err.message);
+        }
+      }
+    });
+
+    // ---------- Log ----------
+    let logPage = 1;
+    const LOG_PAGE_SIZE = 25;
+
+    const logTypeFilter = document.getElementById('logTypeFilter');
+    const logError = document.getElementById('logError');
+    const logLoading = document.getElementById('logLoading');
+    const logEmpty = document.getElementById('logEmpty');
+    const logTableWrap = document.getElementById('logTableWrap');
+    const logTableBody = document.getElementById('logTableBody');
+    const logPagination = document.getElementById('logPagination');
+
+    function renderLogRow(n) {
+      return `
+        <tr>
+          <td>${escapeHtml(n.recipient?.full_name || n.user_id)}</td>
+          <td><span class="badge badge-slate">${escapeHtml(n.type)}</span></td>
+          <td class="strong">${escapeHtml(n.title)}</td>
+          <td class="tpl-body-preview">${escapeHtml(n.body || '—')}</td>
+          <td>${n.read_at ? `<span class="badge badge-green">Read</span>` : `<span class="badge badge-orange">Unread</span>`}</td>
+          <td>${formatDate(n.created_at)}</td>
+        </tr>`;
+    }
+
+    async function loadLog() {
+      logLoading.hidden = false;
+      logError.hidden = true;
+      logEmpty.hidden = true;
+      logTableWrap.hidden = true;
+      logPagination.hidden = true;
+
+      try {
+        const params = new URLSearchParams({ page: String(logPage), limit: String(LOG_PAGE_SIZE) });
+        if (logTypeFilter.value) params.set('type', logTypeFilter.value);
+
+        const res = await adminApiFetch(`/api/admin/notifications?${params.toString()}`);
+        if (res.status === 403) throw new Error(NO_STAFF_ROLE_MESSAGE);
+        const body = await res.json();
+        if (!res.ok) throw new Error(body.error || `Request failed (${res.status})`);
+
+        logLoading.hidden = true;
+        const items = body.notifications || [];
+        if (!items.length) {
+          logEmpty.hidden = false;
+          return;
+        }
+
+        // Populate the type filter from whatever's on this page, additively
+        // — there's no separate "distinct types" endpoint.
+        const existingTypes = new Set([...logTypeFilter.options].map((o) => o.value));
+        items.forEach((n) => {
+          if (!existingTypes.has(n.type)) {
+            existingTypes.add(n.type);
+            logTypeFilter.insertAdjacentHTML('beforeend', `<option value="${escapeHtml(n.type)}">${escapeHtml(n.type)}</option>`);
+          }
+        });
+
+        logTableBody.innerHTML = items.map(renderLogRow).join('');
+        logTableWrap.hidden = false;
+
+        const totalPages = Math.max(1, Math.ceil((body.total || 0) / LOG_PAGE_SIZE));
+        logPagination.hidden = false;
+        logPagination.innerHTML = `
+          <button class="btn btn-outline-slate btn-sm" id="logPrevBtn" ${logPage <= 1 ? 'disabled' : ''}>Previous</button>
+          <span>Page ${logPage} of ${totalPages} (${body.total || 0} total)</span>
+          <button class="btn btn-outline-slate btn-sm" id="logNextBtn" ${logPage >= totalPages ? 'disabled' : ''}>Next</button>`;
+        document.getElementById('logPrevBtn').addEventListener('click', () => { logPage--; loadLog(); });
+        document.getElementById('logNextBtn').addEventListener('click', () => { logPage++; loadLog(); });
+      } catch (err) {
+        logLoading.hidden = true;
+        logError.textContent = err.message;
+        logError.hidden = false;
+      }
+    }
+
+    logTypeFilter.addEventListener('change', () => { logPage = 1; loadLog(); });
+
+    // ---------- Tabs ----------
+    const templatesPanel = document.getElementById('templatesPanel');
+    const logPanel = document.getElementById('logPanel');
+    let logLoadedOnce = false;
+
+    document.querySelectorAll('.notif-tab').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.notif-tab').forEach((b) => b.classList.toggle('active', b === btn));
+        const tab = btn.dataset.tab;
+        templatesPanel.hidden = tab !== 'templates';
+        logPanel.hidden = tab !== 'log';
+        if (tab === 'log' && !logLoadedOnce) {
+          logLoadedOnce = true;
+          loadLog();
+        }
+      });
+    });
+
+    (async function init() {
+      const session = await requireStaffSession();
+      if (!session) return; // already redirected to /admin/login/
+      await initAdminNav();
+      lucide.createIcons();
+      await loadTemplates();
+    })();
+
+    const burgerBtn = document.getElementById('burgerBtn');
+    const mobileMenu = document.getElementById('mobileMenu');
+    burgerBtn.addEventListener('click', () => {
+      mobileMenu.classList.toggle('open');
+      burgerBtn.innerHTML = mobileMenu.classList.contains('open') ? '<i data-lucide="x"></i>' : '<i data-lucide="menu"></i>';
+      lucide.createIcons();
+    });
+  </script>
+</body>
+
+</html>

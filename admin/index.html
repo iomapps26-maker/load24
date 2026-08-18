@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Dashboard — LOAD24</title>
+  <meta name="robots" content="noindex, nofollow" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  <link rel="stylesheet" href="../css/app-theme.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="js/admin-shared.js"></script>
+  <style>
+    .app-nav-links { flex-wrap: wrap; row-gap: 6px; }
+
+    .admin-wrap { max-width: 1080px; margin: 0 auto; padding: 56px 20px 80px; }
+    .admin-wrap h1 { font-size: 28px; margin: 0 0 8px; }
+    .admin-wrap p.sub { color: var(--slate); font-size: 15px; margin: 0 0 36px; }
+
+    .admin-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+    .admin-card {
+      background: var(--white);
+      border: 1px solid var(--slate-200);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-soft);
+      padding: 28px;
+      display: block;
+      transition: transform .15s, box-shadow .15s;
+    }
+    .admin-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-lift); }
+    .admin-card .icon-badge {
+      width: 44px; height: 44px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(249,115,22,.12); margin-bottom: 16px;
+    }
+    .admin-card h2 { font-size: 18px; margin: 0 0 6px; }
+    .admin-card p { color: var(--slate); font-size: 13.5px; margin: 0 0 14px; }
+    .admin-card .go { color: var(--brand); font-weight: 700; font-size: 13.5px; display: flex; align-items: center; gap: 6px; }
+
+    @media (max-width: 900px) { .admin-cards { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 600px) { .admin-cards { grid-template-columns: 1fr; } }
+  </style>
+</head>
+
+<body class="app-theme">
+  <header class="app-nav" id="siteNav">
+    <div class="wrap app-nav-inner">
+      <a href="/admin/" class="app-logo">
+        <i data-lucide="shield-check" style="width:20px;height:20px;color:#f97316;"></i>LOAD<span>24</span>
+        <span style="color:#94a3b8;font-weight:600;font-size:13px;margin-left:4px;">Admin</span>
+      </a>
+      <nav class="app-nav-links">
+        <a href="/admin/" class="active">Dashboard</a>
+        <a href="/admin/kyc/">KYC Queue</a>
+        <a href="/admin/trucks/">Truck KYC</a>
+        <a href="/admin/withdrawals/">Withdrawals</a>
+        <a href="/admin/moderation/">Moderation</a>
+        <a href="/admin/trips/">Trips</a>
+        <a href="/admin/notifications/">Notifications</a>
+        <a href="/admin/users/">Users</a>
+        <a href="/admin/risk/">Risk</a>
+        <a href="/admin/content/">Content</a>
+        <a href="/admin/master-data/">Master Data</a>
+        <a href="/admin/audit-log/">Audit Log</a>
+      </nav>
+      <div class="app-nav-actions">
+        <span id="staffEmail" style="color:#94a3b8;font-size:13px;"></span>
+        <button class="btn btn-ghost-white btn-sm" id="signOutBtn"><i data-lucide="log-out" style="width:15px;height:15px;"></i> Sign Out</button>
+        <button class="app-burger" id="burgerBtn" aria-label="Open menu"><i data-lucide="menu"></i></button>
+      </div>
+    </div>
+    <div class="app-mobile-menu" id="mobileMenu">
+      <a href="/admin/">Dashboard</a>
+      <a href="/admin/kyc/">KYC Queue</a>
+      <a href="/admin/trucks/">Truck KYC</a>
+      <a href="/admin/withdrawals/">Withdrawals</a>
+      <a href="/admin/moderation/">Moderation</a>
+      <a href="/admin/trips/">Trips</a>
+      <a href="/admin/notifications/">Notifications</a>
+      <a href="/admin/users/">Users</a>
+      <a href="/admin/risk/">Risk</a>
+      <a href="/admin/content/">Content</a>
+      <a href="/admin/master-data/">Master Data</a>
+      <a href="/admin/audit-log/">Audit Log</a>
+    </div>
+  </header>
+
+  <main class="admin-wrap">
+    <h1>Staff Dashboard</h1>
+    <p class="sub">Review pending KYC submissions and withdrawal requests.</p>
+    <div class="admin-cards">
+      <a href="/admin/kyc/" class="admin-card">
+        <div class="icon-badge"><i data-lucide="shield-check" style="width:22px;height:22px;color:#f97316;"></i></div>
+        <h2>KYC Queue</h2>
+        <p>Review identity documents and verify or reject accounts.</p>
+        <div class="go">Open KYC Queue <i data-lucide="arrow-right" style="width:14px;height:14px;"></i></div>
+      </a>
+      <a href="/admin/trucks/" class="admin-card">
+        <div class="icon-badge"><i data-lucide="truck" style="width:22px;height:22px;color:#f97316;"></i></div>
+        <h2>Truck KYC</h2>
+        <p>Review uploaded vehicle papers (RC, permit, PUC, insurance) and verify trucks.</p>
+        <div class="go">Open Truck Queue <i data-lucide="arrow-right" style="width:14px;height:14px;"></i></div>
+      </a>
+      <a href="/admin/withdrawals/" class="admin-card">
+        <div class="icon-badge"><i data-lucide="wallet" style="width:22px;height:22px;color:#f97316;"></i></div>
+        <h2>Withdrawal Queue</h2>
+        <p>Approve, reject, or mark wallet withdrawal requests as paid.</p>
+        <div class="go">Open Withdrawal Queue <i data-lucide="arrow-right" style="width:14px;height:14px;"></i></div>
+      </a>
+      <a href="/admin/moderation/" class="admin-card">
+        <div class="icon-badge"><i data-lucide="flag" style="width:22px;height:22px;color:#f97316;"></i></div>
+        <h2>Moderation</h2>
+        <p>Flag, remove, or restore loads and vehicles.</p>
+        <div class="go">Open Moderation <i data-lucide="arrow-right" style="width:14px;height:14px;"></i></div>
+      </a>
+      <a href="/admin/trips/" class="admin-card">
+        <div class="icon-badge"><i data-lucide="map" style="width:22px;height:22px;color:#f97316;"></i></div>
+        <h2>Active Trips</h2>
+        <p>Track live trips on the map and force-cancel if needed.</p>
+        <div class="go">Open Trips <i data-lucide="arrow-right" style="width:14px;height:14px;"></i></div>
+      </a>
+      <a href="/admin/notifications/" class="admin-card">
+        <div class="icon-badge"><i data-lucide="bell" style="width:22px;height:22px;color:#f97316;"></i></div>
+        <h2>Notifications</h2>
+        <p>Manage templates and review what's been sent.</p>
+        <div class="go">Open Notifications <i data-lucide="arrow-right" style="width:14px;height:14px;"></i></div>
+      </a>
+      <a href="/admin/users/" class="admin-card">
+        <div class="icon-badge"><i data-lucide="users" style="width:22px;height:22px;color:#f97316;"></i></div>
+        <h2>Users</h2>
+        <p>Search every user and manage staff role assignments.</p>
+        <div class="go">Open Users <i data-lucide="arrow-right" style="width:14px;height:14px;"></i></div>
+      </a>
+      <a href="/admin/risk/" class="admin-card">
+        <div class="icon-badge"><i data-lucide="alert-triangle" style="width:22px;height:22px;color:#f97316;"></i></div>
+        <h2>Risk Signals</h2>
+        <p>Users ranked by a computed risk score — trust, cancellations, KYC mismatches.</p>
+        <div class="go">Open Risk Signals <i data-lucide="arrow-right" style="width:14px;height:14px;"></i></div>
+      </a>
+      <a href="/admin/content/" class="admin-card">
+        <div class="icon-badge"><i data-lucide="layout-template" style="width:22px;height:22px;color:#f97316;"></i></div>
+        <h2>Content</h2>
+        <p>Manage banners, FAQs, and config blocks the app reads on launch.</p>
+        <div class="go">Open Content <i data-lucide="arrow-right" style="width:14px;height:14px;"></i></div>
+      </a>
+      <a href="/admin/master-data/" class="admin-card">
+        <div class="icon-badge"><i data-lucide="list-tree" style="width:22px;height:22px;color:#f97316;"></i></div>
+        <h2>Master Data</h2>
+        <p>Edit truck types, body types, and other closed lists without a code deploy.</p>
+        <div class="go">Open Master Data <i data-lucide="arrow-right" style="width:14px;height:14px;"></i></div>
+      </a>
+      <a href="/admin/audit-log/" class="admin-card">
+        <div class="icon-badge"><i data-lucide="history" style="width:22px;height:22px;color:#f97316;"></i></div>
+        <h2>Audit Log</h2>
+        <p>Every staff mutation, logged automatically — who did what, and when.</p>
+        <div class="go">Open Audit Log <i data-lucide="arrow-right" style="width:14px;height:14px;"></i></div>
+      </a>
+    </div>
+  </main>
+
+  <footer class="app-footer">
+    <div class="wrap">
+      <div class="foot-top">
+        <a href="/" class="app-logo"><i data-lucide="truck" style="width:20px;height:20px;color:#f97316;"></i>LOAD24.in</a>
+        <div class="badge badge-green">🟢 All India Services</div>
+      </div>
+      <p class="copyright">© 2026 LOAD24. All rights reserved.</p>
+      <div class="foot-links">
+        <a href="/delete-account/">Delete Account</a><span>|</span>
+        <a href="/PrivacyPolicy/">Privacy Policy</a><span>|</span>
+        <a href="/">Main Site</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    (async function guard() {
+      const session = await requireStaffSession();
+      if (!session) return; // already redirected to /admin/login/
+      await initAdminNav();
+      lucide.createIcons();
+    })();
+
+    const burgerBtn = document.getElementById('burgerBtn');
+    const mobileMenu = document.getElementById('mobileMenu');
+    burgerBtn.addEventListener('click', () => {
+      mobileMenu.classList.toggle('open');
+      burgerBtn.innerHTML = mobileMenu.classList.contains('open') ? '<i data-lucide="x"></i>' : '<i data-lucide="menu"></i>';
+      lucide.createIcons();
+    });
+  </script>
+</body>
+
+</html>

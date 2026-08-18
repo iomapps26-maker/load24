@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Withdrawal Queue — LOAD24 Admin</title>
+  <meta name="robots" content="noindex, nofollow" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  <link rel="stylesheet" href="../../css/app-theme.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="../js/admin-shared.js"></script>
+  <style>
+    .app-nav-links { flex-wrap: wrap; row-gap: 6px; }
+
+    .admin-wrap { max-width: 900px; margin: 0 auto; padding: 48px 20px 80px; }
+    .admin-wrap h1 { font-size: 26px; margin: 0 0 8px; }
+    .admin-wrap p.sub { color: var(--slate); font-size: 14.5px; margin: 0 0 28px; }
+
+    .admin-error {
+      background: #fee2e2;
+      color: #b91c1c;
+      font-size: 13.5px;
+      font-weight: 600;
+      padding: 14px 16px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
+    .admin-loading, .admin-empty {
+      text-align: center;
+      color: var(--slate);
+      font-size: 14px;
+      padding: 60px 20px;
+      background: var(--slate-50);
+      border-radius: var(--radius-md);
+    }
+
+    .wd-case {
+      background: var(--white);
+      border: 1px solid var(--slate-200);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-soft);
+      padding: 22px;
+      margin-bottom: 16px;
+    }
+    .wd-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+    .wd-amount { font-weight: 800; font-size: 20px; font-family: 'Poppins', sans-serif; color: var(--ink); }
+    .wd-meta { color: var(--slate); font-size: 12.5px; margin-top: 4px; }
+
+    .wd-bank {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px;
+      background: var(--slate-50); border-radius: 12px; padding: 14px 16px; margin-top: 16px;
+    }
+    .wd-bank div span { display: block; font-size: 11px; color: var(--slate-light); margin-bottom: 3px; }
+    .wd-bank div b { font-size: 13.5px; color: var(--ink); }
+
+    .wd-error {
+      background: #fee2e2; color: #b91c1c; font-size: 12.5px; font-weight: 600;
+      padding: 8px 12px; border-radius: 8px; margin-top: 14px;
+    }
+
+    .wd-actions { display: flex; gap: 10px; margin-top: 16px; }
+    .wd-reject-panel { margin-top: 14px; }
+    .wd-reject-reason {
+      width: 100%; font-family: inherit; font-size: 13.5px;
+      border: 1.5px solid var(--slate-200); border-radius: 10px;
+      padding: 10px 12px; resize: vertical; min-height: 60px; outline: none;
+    }
+    .wd-reject-reason:focus { border-color: var(--brand); }
+    .wd-reject-actions { display: flex; gap: 10px; margin-top: 10px; }
+
+    @media (max-width: 700px) { .wd-bank { grid-template-columns: repeat(2, 1fr); } }
+  </style>
+</head>
+
+<body class="app-theme">
+  <header class="app-nav" id="siteNav">
+    <div class="wrap app-nav-inner">
+      <a href="/admin/" class="app-logo">
+        <i data-lucide="shield-check" style="width:20px;height:20px;color:#f97316;"></i>LOAD<span>24</span>
+        <span style="color:#94a3b8;font-weight:600;font-size:13px;margin-left:4px;">Admin</span>
+      </a>
+      <nav class="app-nav-links">
+        <a href="/admin/">Dashboard</a>
+        <a href="/admin/kyc/">KYC Queue</a>
+        <a href="/admin/trucks/">Truck KYC</a>
+        <a href="/admin/withdrawals/" class="active">Withdrawals</a>
+        <a href="/admin/moderation/">Moderation</a>
+        <a href="/admin/trips/">Trips</a>
+        <a href="/admin/notifications/">Notifications</a>
+        <a href="/admin/users/">Users</a>
+        <a href="/admin/risk/">Risk</a>
+        <a href="/admin/content/">Content</a>
+        <a href="/admin/master-data/">Master Data</a>
+        <a href="/admin/audit-log/">Audit Log</a>
+      </nav>
+      <div class="app-nav-actions">
+        <span id="staffEmail" style="color:#94a3b8;font-size:13px;"></span>
+        <button class="btn btn-ghost-white btn-sm" id="signOutBtn"><i data-lucide="log-out" style="width:15px;height:15px;"></i> Sign Out</button>
+        <button class="app-burger" id="burgerBtn" aria-label="Open menu"><i data-lucide="menu"></i></button>
+      </div>
+    </div>
+    <div class="app-mobile-menu" id="mobileMenu">
+      <a href="/admin/">Dashboard</a>
+      <a href="/admin/kyc/">KYC Queue</a>
+      <a href="/admin/trucks/">Truck KYC</a>
+      <a href="/admin/withdrawals/">Withdrawals</a>
+      <a href="/admin/moderation/">Moderation</a>
+      <a href="/admin/trips/">Trips</a>
+      <a href="/admin/notifications/">Notifications</a>
+      <a href="/admin/users/">Users</a>
+      <a href="/admin/risk/">Risk</a>
+      <a href="/admin/content/">Content</a>
+      <a href="/admin/master-data/">Master Data</a>
+      <a href="/admin/audit-log/">Audit Log</a>
+    </div>
+  </header>
+
+  <main class="admin-wrap">
+    <h1>Withdrawal Queue</h1>
+    <p class="sub">Pending withdrawal requests, oldest first.</p>
+
+    <div id="wdError" class="admin-error" hidden></div>
+    <div id="wdLoading" class="admin-loading">Loading queue…</div>
+    <div id="wdEmpty" class="admin-empty" hidden>No pending withdrawal requests.</div>
+    <div id="wdList"></div>
+  </main>
+
+  <footer class="app-footer">
+    <div class="wrap">
+      <div class="foot-top">
+        <a href="/" class="app-logo"><i data-lucide="truck" style="width:20px;height:20px;color:#f97316;"></i>LOAD24.in</a>
+        <div class="badge badge-green">🟢 All India Services</div>
+      </div>
+      <p class="copyright">© 2026 LOAD24. All rights reserved.</p>
+      <div class="foot-links">
+        <a href="/delete-account/">Delete Account</a><span>|</span>
+        <a href="/PrivacyPolicy/">Privacy Policy</a><span>|</span>
+        <a href="/">Main Site</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    const loadingEl = document.getElementById('wdLoading');
+    const errorEl = document.getElementById('wdError');
+    const emptyEl = document.getElementById('wdEmpty');
+    const listEl = document.getElementById('wdList');
+
+    const STATUS_BADGE = { pending: 'badge-orange', approved: 'badge-blue', paid: 'badge-green', rejected: 'badge-red' };
+
+    function renderActions(status) {
+      if (status === 'pending') {
+        return `
+          <button class="btn btn-brand btn-sm" data-action="approve"><i data-lucide="check" style="width:14px;height:14px;"></i> Approve</button>
+          <button class="btn btn-outline-slate btn-sm" style="color:#dc2626;border-color:#fecaca;" data-action="reject-toggle"><i data-lucide="x" style="width:14px;height:14px;"></i> Reject</button>`;
+      }
+      if (status === 'approved') {
+        return `
+          <button class="btn btn-brand btn-sm" data-action="pay"><i data-lucide="banknote" style="width:14px;height:14px;"></i> Mark Paid</button>
+          <button class="btn btn-outline-slate btn-sm" style="color:#dc2626;border-color:#fecaca;" data-action="reject-toggle"><i data-lucide="x" style="width:14px;height:14px;"></i> Reject</button>`;
+      }
+      return ''; // paid / rejected — nothing left to do
+    }
+
+    function renderCase(row) {
+      return `
+        <div class="wd-case" data-id="${escapeHtml(row.id)}" data-status="${escapeHtml(row.status)}">
+          <div class="wd-head">
+            <div>
+              <div class="wd-amount">${formatInr(row.amount)}</div>
+              <div class="wd-meta">User ${escapeHtml(row.user_id)} · Requested ${formatDate(row.created_at)}</div>
+            </div>
+            <div class="badge ${STATUS_BADGE[row.status] || 'badge-slate'}" data-role="status-badge">${escapeHtml(titleCase(row.status))}</div>
+          </div>
+          <div class="wd-bank">
+            <div><span>Account Holder</span><b>${escapeHtml(row.bank_account_holder_name)}</b></div>
+            <div><span>Account No.</span><b>${escapeHtml(row.bank_account_number)}</b></div>
+            <div><span>IFSC</span><b>${escapeHtml(row.bank_ifsc_code)}</b></div>
+            <div><span>Bank</span><b>${escapeHtml(row.bank_name)}</b></div>
+          </div>
+          <div class="wd-error" hidden></div>
+          <div class="wd-actions" data-role="actions">${renderActions(row.status)}</div>
+          <div class="wd-reject-panel" hidden>
+            <textarea class="wd-reject-reason" placeholder="Reason for rejection (optional)"></textarea>
+            <div class="wd-reject-actions">
+              <button class="btn btn-outline-slate btn-sm" data-action="reject-cancel">Cancel</button>
+              <button class="btn btn-sm" style="background:#dc2626;color:#fff;" data-action="reject-confirm">Confirm Reject</button>
+            </div>
+          </div>
+        </div>`;
+    }
+
+    function setCardBusy(cardEl, busy) {
+      cardEl.querySelectorAll('button').forEach((b) => { b.disabled = busy; });
+    }
+
+    function showCardError(cardEl, message) {
+      const box = cardEl.querySelector('.wd-error');
+      box.textContent = message;
+      box.hidden = false;
+    }
+
+    function applyStatus(cardEl, row) {
+      cardEl.dataset.status = row.status;
+      const badge = cardEl.querySelector('[data-role="status-badge"]');
+      badge.className = `badge ${STATUS_BADGE[row.status] || 'badge-slate'}`;
+      badge.textContent = titleCase(row.status);
+      cardEl.querySelector('[data-role="actions"]').innerHTML = renderActions(row.status);
+      cardEl.querySelector('.wd-reject-panel').hidden = true;
+      lucide.createIcons();
+    }
+
+    async function loadQueue() {
+      loadingEl.hidden = false;
+      errorEl.hidden = true;
+      emptyEl.hidden = true;
+      listEl.innerHTML = '';
+      try {
+        const res = await adminApiFetch('/api/wallet/withdrawals/pending');
+        if (res.status === 403) throw new Error(NO_STAFF_ROLE_MESSAGE);
+        const body = await res.json();
+        if (!res.ok) throw new Error(body.error || `Request failed (${res.status})`);
+
+        loadingEl.hidden = true;
+        if (!body.length) {
+          emptyEl.hidden = false;
+          return;
+        }
+        listEl.innerHTML = body.map(renderCase).join('');
+        lucide.createIcons();
+      } catch (err) {
+        loadingEl.hidden = true;
+        errorEl.textContent = err.message;
+        errorEl.hidden = false;
+      }
+    }
+
+    listEl.addEventListener('click', async (e) => {
+      const btn = e.target.closest('button[data-action]');
+      if (!btn) return;
+      const cardEl = btn.closest('.wd-case');
+      const id = cardEl.dataset.id;
+      const action = btn.dataset.action;
+      const panel = cardEl.querySelector('.wd-reject-panel');
+
+      if (action === 'reject-toggle') {
+        panel.hidden = !panel.hidden;
+        return;
+      }
+      if (action === 'reject-cancel') {
+        panel.hidden = true;
+        return;
+      }
+
+      if (action === 'approve' || action === 'pay') {
+        const path = action === 'approve' ? `/api/wallet/withdrawals/${id}/approve` : `/api/wallet/withdrawals/${id}/pay`;
+        setCardBusy(cardEl, true);
+        try {
+          const res = await adminApiFetch(path, { method: 'POST' });
+          const body = await res.json();
+          if (!res.ok) throw new Error(body.error || `Failed to ${action}`);
+          applyStatus(cardEl, body);
+        } catch (err) {
+          showCardError(cardEl, err.message);
+        } finally {
+          setCardBusy(cardEl, false);
+        }
+        return;
+      }
+
+      if (action === 'reject-confirm') {
+        const reason = cardEl.querySelector('.wd-reject-reason').value.trim();
+        setCardBusy(cardEl, true);
+        try {
+          const res = await adminApiFetch(`/api/wallet/withdrawals/${id}/reject`, {
+            method: 'POST',
+            body: JSON.stringify({ reason })
+          });
+          const body = await res.json();
+          if (!res.ok) throw new Error(body.error || 'Failed to reject');
+          applyStatus(cardEl, body);
+        } catch (err) {
+          showCardError(cardEl, err.message);
+        } finally {
+          setCardBusy(cardEl, false);
+        }
+      }
+    });
+
+    (async function init() {
+      const session = await requireStaffSession();
+      if (!session) return; // already redirected to /admin/login/
+      await initAdminNav();
+      lucide.createIcons();
+      await loadQueue();
+    })();
+
+    const burgerBtn = document.getElementById('burgerBtn');
+    const mobileMenu = document.getElementById('mobileMenu');
+    burgerBtn.addEventListener('click', () => {
+      mobileMenu.classList.toggle('open');
+      burgerBtn.innerHTML = mobileMenu.classList.contains('open') ? '<i data-lucide="x"></i>' : '<i data-lucide="menu"></i>';
+      lucide.createIcons();
+    });
+  </script>
+</body>
+
+</html>

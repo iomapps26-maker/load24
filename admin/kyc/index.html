@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>KYC Queue — LOAD24 Admin</title>
+  <meta name="robots" content="noindex, nofollow" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  <link rel="stylesheet" href="../../css/app-theme.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="../js/admin-shared.js"></script>
+  <style>
+    .app-nav-links { flex-wrap: wrap; row-gap: 6px; }
+
+    .admin-wrap { max-width: 900px; margin: 0 auto; padding: 48px 20px 80px; }
+    .admin-wrap h1 { font-size: 26px; margin: 0 0 8px; }
+    .admin-wrap p.sub { color: var(--slate); font-size: 14.5px; margin: 0 0 28px; }
+
+    .admin-error {
+      background: #fee2e2;
+      color: #b91c1c;
+      font-size: 13.5px;
+      font-weight: 600;
+      padding: 14px 16px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
+    .admin-loading, .admin-empty {
+      text-align: center;
+      color: var(--slate);
+      font-size: 14px;
+      padding: 60px 20px;
+      background: var(--slate-50);
+      border-radius: var(--radius-md);
+    }
+
+    .kyc-case {
+      background: var(--white);
+      border: 1px solid var(--slate-200);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-soft);
+      padding: 22px;
+      margin-bottom: 16px;
+    }
+    .kyc-case-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+    .kyc-case-name { font-weight: 700; font-size: 15.5px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .kyc-case-meta { color: var(--slate); font-size: 13px; margin-top: 4px; }
+    .kyc-case-sub { color: var(--slate-light); font-size: 12px; margin-top: 10px; }
+
+    .kyc-docs { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+    .kyc-doc-chip {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--slate-50); border: 1px solid var(--slate-200);
+      border-radius: 999px; padding: 6px 12px; font-size: 12.5px; color: #334155;
+    }
+    .kyc-doc-empty { color: var(--slate-light); font-size: 12.5px; font-style: italic; }
+
+    .kyc-case-error {
+      background: #fee2e2; color: #b91c1c; font-size: 12.5px; font-weight: 600;
+      padding: 8px 12px; border-radius: 8px; margin-top: 14px;
+    }
+    .kyc-case-note {
+      background: var(--slate-50); color: var(--slate); font-size: 12.5px; font-style: italic;
+      padding: 10px 12px; border-radius: 8px; margin-top: 14px;
+    }
+
+    .kyc-case-actions { display: flex; gap: 10px; margin-top: 16px; }
+    .kyc-reject-panel { margin-top: 14px; }
+    .kyc-reject-reason {
+      width: 100%; font-family: inherit; font-size: 13.5px;
+      border: 1.5px solid var(--slate-200); border-radius: 10px;
+      padding: 10px 12px; resize: vertical; min-height: 60px; outline: none;
+    }
+    .kyc-reject-reason:focus { border-color: var(--brand); }
+    .kyc-reject-actions { display: flex; gap: 10px; margin-top: 10px; }
+  </style>
+</head>
+
+<body class="app-theme">
+  <header class="app-nav" id="siteNav">
+    <div class="wrap app-nav-inner">
+      <a href="/admin/" class="app-logo">
+        <i data-lucide="shield-check" style="width:20px;height:20px;color:#f97316;"></i>LOAD<span>24</span>
+        <span style="color:#94a3b8;font-weight:600;font-size:13px;margin-left:4px;">Admin</span>
+      </a>
+      <nav class="app-nav-links">
+        <a href="/admin/">Dashboard</a>
+        <a href="/admin/kyc/" class="active">KYC Queue</a>
+        <a href="/admin/trucks/">Truck KYC</a>
+        <a href="/admin/withdrawals/">Withdrawals</a>
+        <a href="/admin/moderation/">Moderation</a>
+        <a href="/admin/trips/">Trips</a>
+        <a href="/admin/notifications/">Notifications</a>
+        <a href="/admin/users/">Users</a>
+        <a href="/admin/risk/">Risk</a>
+        <a href="/admin/content/">Content</a>
+        <a href="/admin/master-data/">Master Data</a>
+        <a href="/admin/audit-log/">Audit Log</a>
+      </nav>
+      <div class="app-nav-actions">
+        <span id="staffEmail" style="color:#94a3b8;font-size:13px;"></span>
+        <button class="btn btn-ghost-white btn-sm" id="signOutBtn"><i data-lucide="log-out" style="width:15px;height:15px;"></i> Sign Out</button>
+        <button class="app-burger" id="burgerBtn" aria-label="Open menu"><i data-lucide="menu"></i></button>
+      </div>
+    </div>
+    <div class="app-mobile-menu" id="mobileMenu">
+      <a href="/admin/">Dashboard</a>
+      <a href="/admin/kyc/">KYC Queue</a>
+      <a href="/admin/trucks/">Truck KYC</a>
+      <a href="/admin/withdrawals/">Withdrawals</a>
+      <a href="/admin/moderation/">Moderation</a>
+      <a href="/admin/trips/">Trips</a>
+      <a href="/admin/notifications/">Notifications</a>
+      <a href="/admin/users/">Users</a>
+      <a href="/admin/risk/">Risk</a>
+      <a href="/admin/content/">Content</a>
+      <a href="/admin/master-data/">Master Data</a>
+      <a href="/admin/audit-log/">Audit Log</a>
+    </div>
+  </header>
+
+  <main class="admin-wrap">
+    <h1>KYC Queue</h1>
+    <p class="sub">User KYC cases in progress or awaiting review, newest first.</p>
+
+    <div id="kycError" class="admin-error" hidden></div>
+    <div id="kycLoading" class="admin-loading">Loading queue…</div>
+    <div id="kycEmpty" class="admin-empty" hidden>No KYC cases in progress or awaiting review.</div>
+    <div id="kycList"></div>
+  </main>
+
+  <footer class="app-footer">
+    <div class="wrap">
+      <div class="foot-top">
+        <a href="/" class="app-logo"><i data-lucide="truck" style="width:20px;height:20px;color:#f97316;"></i>LOAD24.in</a>
+        <div class="badge badge-green">🟢 All India Services</div>
+      </div>
+      <p class="copyright">© 2026 LOAD24. All rights reserved.</p>
+      <div class="foot-links">
+        <a href="/delete-account/">Delete Account</a><span>|</span>
+        <a href="/PrivacyPolicy/">Privacy Policy</a><span>|</span>
+        <a href="/">Main Site</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    const loadingEl = document.getElementById('kycLoading');
+    const errorEl = document.getElementById('kycError');
+    const emptyEl = document.getElementById('kycEmpty');
+    const listEl = document.getElementById('kycList');
+
+    // pending/partial mean the user is still uploading — not yet a valid
+    // target for :userId/verify or :userId/reject (both only accept
+    // 'submitted'), so those two statuses get an info note instead of
+    // action buttons rather than a button that would just 409.
+    const STATUS_BADGE = { pending: 'badge-slate', partial: 'badge-orange', submitted: 'badge-blue' };
+
+    function renderCase(item) {
+      const kycCase = item.case;
+      const profile = item.profile;
+      const documents = item.documents || [];
+      const canReview = kycCase.status === 'submitted';
+
+      const docsHtml = documents.length
+        ? documents.map((d) => {
+            const label = `${escapeHtml(titleCase(d.document_type))}${d.file_name ? ' · ' + escapeHtml(d.file_name) : ''}`;
+            const icon = '<i data-lucide="file-text" style="width:13px;height:13px;"></i>';
+            // url is a short-lived (5 min) signed link minted fresh on this
+            // fetch — null only if signing itself failed server-side.
+            return d.url
+              ? `<a class="kyc-doc-chip" href="${escapeHtml(d.url)}" target="_blank" rel="noopener">${icon} ${label}</a>`
+              : `<div class="kyc-doc-chip" style="opacity:.6;">${icon} ${label} (preview unavailable)</div>`;
+          }).join('')
+        : '<div class="kyc-doc-empty">No documents uploaded yet</div>';
+
+      const actionsHtml = canReview
+        ? `
+          <div class="kyc-case-actions">
+            <button class="btn btn-brand btn-sm" data-action="verify"><i data-lucide="check" style="width:14px;height:14px;"></i> Approve</button>
+            <button class="btn btn-outline-slate btn-sm" style="color:#dc2626;border-color:#fecaca;" data-action="reject-toggle"><i data-lucide="x" style="width:14px;height:14px;"></i> Reject</button>
+          </div>
+          <div class="kyc-reject-panel" hidden>
+            <textarea class="kyc-reject-reason" placeholder="Reason for rejection (optional)"></textarea>
+            <div class="kyc-reject-actions">
+              <button class="btn btn-outline-slate btn-sm" data-action="reject-cancel">Cancel</button>
+              <button class="btn btn-sm" style="background:#dc2626;color:#fff;" data-action="reject-confirm">Confirm Reject</button>
+            </div>
+          </div>`
+        : `<div class="kyc-case-note">Waiting on the user to finish uploading documents — not ready for review yet.</div>`;
+
+      return `
+        <div class="kyc-case" data-user-id="${escapeHtml(kycCase.user_id)}">
+          <div class="kyc-case-head">
+            <div>
+              <div class="kyc-case-name">
+                ${escapeHtml(profile?.full_name || 'Unknown user')}
+                <span class="badge badge-slate">${escapeHtml(titleCase(kycCase.kyc_type))}</span>
+              </div>
+              <div class="kyc-case-meta">${escapeHtml(profile?.mobile || '—')} · ${escapeHtml(profile?.city || '—')}</div>
+            </div>
+            <div class="badge ${STATUS_BADGE[kycCase.status] || 'badge-slate'}">${escapeHtml(titleCase(kycCase.status))}</div>
+          </div>
+          <div class="kyc-case-sub">Case created ${formatDate(kycCase.created_at)}</div>
+          <div class="kyc-docs">${docsHtml}</div>
+          <div class="kyc-case-error" hidden></div>
+          ${actionsHtml}
+        </div>`;
+    }
+
+    function setCardBusy(cardEl, busy) {
+      cardEl.querySelectorAll('button').forEach((b) => { b.disabled = busy; });
+    }
+
+    function showCardError(cardEl, message) {
+      const box = cardEl.querySelector('.kyc-case-error');
+      box.textContent = message;
+      box.hidden = false;
+    }
+
+    function checkEmpty() {
+      if (!listEl.children.length) emptyEl.hidden = false;
+    }
+
+    async function loadQueue() {
+      loadingEl.hidden = false;
+      errorEl.hidden = true;
+      emptyEl.hidden = true;
+      listEl.innerHTML = '';
+      try {
+        const res = await adminApiFetch('/api/profile/kyc/queue');
+        if (res.status === 403) throw new Error(NO_STAFF_ROLE_MESSAGE);
+        const body = await res.json();
+        if (!res.ok) throw new Error(body.error || `Request failed (${res.status})`);
+
+        loadingEl.hidden = true;
+        if (!body.length) {
+          emptyEl.hidden = false;
+          return;
+        }
+        listEl.innerHTML = body.map(renderCase).join('');
+        lucide.createIcons();
+      } catch (err) {
+        loadingEl.hidden = true;
+        errorEl.textContent = err.message;
+        errorEl.hidden = false;
+      }
+    }
+
+    listEl.addEventListener('click', async (e) => {
+      const btn = e.target.closest('button[data-action]');
+      if (!btn) return;
+      const cardEl = btn.closest('.kyc-case');
+      const userId = cardEl.dataset.userId;
+      const action = btn.dataset.action;
+      const panel = cardEl.querySelector('.kyc-reject-panel');
+
+      if (action === 'reject-toggle') {
+        panel.hidden = !panel.hidden;
+        return;
+      }
+      if (action === 'reject-cancel') {
+        panel.hidden = true;
+        return;
+      }
+
+      if (action === 'verify') {
+        setCardBusy(cardEl, true);
+        try {
+          const res = await adminApiFetch(`/api/profile/kyc/${userId}/verify`, { method: 'POST' });
+          const body = await res.json();
+          if (!res.ok) throw new Error(body.error || 'Failed to approve');
+          cardEl.remove();
+          checkEmpty();
+        } catch (err) {
+          setCardBusy(cardEl, false);
+          showCardError(cardEl, err.message);
+        }
+        return;
+      }
+
+      if (action === 'reject-confirm') {
+        const reason = cardEl.querySelector('.kyc-reject-reason').value.trim();
+        setCardBusy(cardEl, true);
+        try {
+          const res = await adminApiFetch(`/api/profile/kyc/${userId}/reject`, {
+            method: 'POST',
+            body: JSON.stringify({ reason })
+          });
+          const body = await res.json();
+          if (!res.ok) throw new Error(body.error || 'Failed to reject');
+          cardEl.remove();
+          checkEmpty();
+        } catch (err) {
+          setCardBusy(cardEl, false);
+          showCardError(cardEl, err.message);
+        }
+      }
+    });
+
+    (async function init() {
+      const session = await requireStaffSession();
+      if (!session) return; // already redirected to /admin/login/
+      await initAdminNav();
+      lucide.createIcons();
+      await loadQueue();
+    })();
+
+    const burgerBtn = document.getElementById('burgerBtn');
+    const mobileMenu = document.getElementById('mobileMenu');
+    burgerBtn.addEventListener('click', () => {
+      mobileMenu.classList.toggle('open');
+      burgerBtn.innerHTML = mobileMenu.classList.contains('open') ? '<i data-lucide="x"></i>' : '<i data-lucide="menu"></i>';
+      lucide.createIcons();
+    });
+  </script>
+</body>
+
+</html>

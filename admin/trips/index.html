@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Active Trips — LOAD24 Admin</title>
+  <meta name="robots" content="noindex, nofollow" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  <link rel="stylesheet" href="../../css/app-theme.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="../js/admin-shared.js"></script>
+
+  <!-- No client-side Google Maps key exists anywhere in this project (the
+       only one, GOOGLE_MAPS_API_KEY, is documented server-side-only, used
+       for the Distance Matrix API — never sent to a client). Leaflet +
+       OpenStreetMap needs no API key at all, which is why this page uses it
+       instead — same unpkg CDN convention as the Lucide/Supabase scripts
+       every other admin page already loads. -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+  <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+
+  <style>
+    .app-nav-links { flex-wrap: wrap; row-gap: 6px; }
+
+    .admin-wrap { max-width: 1180px; margin: 0 auto; padding: 48px 20px 80px; }
+    .admin-wrap h1 { font-size: 26px; margin: 0 0 8px; }
+    .admin-wrap p.sub { color: var(--slate); font-size: 14.5px; margin: 0 0 24px; }
+
+    .trips-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+
+    .admin-error {
+      background: #fee2e2; color: #b91c1c; font-size: 13.5px; font-weight: 600;
+      padding: 14px 16px; border-radius: 12px; margin-bottom: 20px; line-height: 1.5;
+    }
+    .admin-loading, .admin-empty {
+      text-align: center; color: var(--slate); font-size: 14px; padding: 60px 20px;
+      background: var(--slate-50); border-radius: var(--radius-md);
+    }
+
+    .trips-table-wrap { overflow-x: auto; background: var(--white); border: 1px solid var(--slate-200); border-radius: var(--radius-md); box-shadow: var(--shadow-soft); }
+    table.trips-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+    table.trips-table th {
+      text-align: left; background: var(--slate-50); color: var(--ink); font-weight: 700;
+      padding: 12px 14px; border-bottom: 2px solid var(--slate-200); white-space: nowrap;
+    }
+    table.trips-table td { padding: 12px 14px; border-bottom: 1px solid var(--slate-200); color: var(--slate); vertical-align: top; }
+    table.trips-table tr:last-child > td { border-bottom: none; }
+    table.trips-table td.strong { color: var(--ink); font-weight: 600; }
+    .trips-party { line-height: 1.5; }
+    .trips-party .name { color: var(--ink); font-weight: 600; }
+    .trips-party .mobile { color: var(--slate-light); font-size: 12px; }
+
+    .trips-row-actions { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .trips-cancel-panel { margin-top: 10px; }
+    .trips-cancel-panel textarea {
+      width: 100%; font-family: inherit; font-size: 13px; border: 1.5px solid var(--slate-200);
+      border-radius: 10px; padding: 8px 10px; resize: vertical; min-height: 50px; outline: none;
+    }
+    .trips-cancel-panel .actions { display: flex; gap: 8px; margin-top: 8px; }
+    .trips-row-error { color: #b91c1c; font-size: 12px; font-weight: 600; margin-top: 6px; }
+
+    .trip-map-row td { padding: 16px; background: var(--slate-50); }
+    .trip-map { height: 320px; border-radius: 12px; border: 1px solid var(--slate-200); }
+    .trip-map-note { color: var(--slate); font-size: 13px; text-align: center; padding: 40px 0; }
+
+    #densityMap { height: 620px; border-radius: var(--radius-md); border: 1px solid var(--slate-200); box-shadow: var(--shadow-soft); }
+  </style>
+</head>
+
+<body class="app-theme">
+  <header class="app-nav" id="siteNav">
+    <div class="wrap app-nav-inner">
+      <a href="/admin/" class="app-logo">
+        <i data-lucide="shield-check" style="width:20px;height:20px;color:#f97316;"></i>LOAD<span>24</span>
+        <span style="color:#94a3b8;font-weight:600;font-size:13px;margin-left:4px;">Admin</span>
+      </a>
+      <nav class="app-nav-links">
+        <a href="/admin/">Dashboard</a>
+        <a href="/admin/kyc/">KYC Queue</a>
+        <a href="/admin/trucks/">Truck KYC</a>
+        <a href="/admin/withdrawals/">Withdrawals</a>
+        <a href="/admin/moderation/">Moderation</a>
+        <a href="/admin/trips/" class="active">Trips</a>
+        <a href="/admin/notifications/">Notifications</a>
+        <a href="/admin/users/">Users</a>
+        <a href="/admin/risk/">Risk</a>
+        <a href="/admin/content/">Content</a>
+        <a href="/admin/master-data/">Master Data</a>
+        <a href="/admin/audit-log/">Audit Log</a>
+      </nav>
+      <div class="app-nav-actions">
+        <span id="staffEmail" style="color:#94a3b8;font-size:13px;"></span>
+        <button class="btn btn-ghost-white btn-sm" id="signOutBtn"><i data-lucide="log-out" style="width:15px;height:15px;"></i> Sign Out</button>
+        <button class="app-burger" id="burgerBtn" aria-label="Open menu"><i data-lucide="menu"></i></button>
+      </div>
+    </div>
+    <div class="app-mobile-menu" id="mobileMenu">
+      <a href="/admin/">Dashboard</a>
+      <a href="/admin/kyc/">KYC Queue</a>
+      <a href="/admin/trucks/">Truck KYC</a>
+      <a href="/admin/withdrawals/">Withdrawals</a>
+      <a href="/admin/moderation/">Moderation</a>
+      <a href="/admin/trips/">Trips</a>
+      <a href="/admin/notifications/">Notifications</a>
+      <a href="/admin/users/">Users</a>
+      <a href="/admin/risk/">Risk</a>
+      <a href="/admin/content/">Content</a>
+      <a href="/admin/master-data/">Master Data</a>
+      <a href="/admin/audit-log/">Audit Log</a>
+    </div>
+  </header>
+
+  <main class="admin-wrap">
+    <h1>Active Trips</h1>
+    <p class="sub">Loads currently matched or in transit, with live location pings.</p>
+
+    <div class="trips-toolbar">
+      <span id="tripsCount" style="font-size:13.5px;color:var(--slate);"></span>
+      <button class="btn btn-outline-brand btn-sm" id="densityToggleBtn"><i data-lucide="map" style="width:14px;height:14px;"></i> Density View</button>
+    </div>
+
+    <div id="tripsError" class="admin-error" hidden></div>
+    <div id="tripsLoading" class="admin-loading">Loading active trips…</div>
+    <div id="tripsEmpty" class="admin-empty" hidden>No active trips right now.</div>
+
+    <div id="tripsTableWrap" class="trips-table-wrap" hidden>
+      <table class="trips-table">
+        <thead>
+          <tr><th>Load</th><th>Poster</th><th>Accepter</th><th>Bid</th><th>Status</th><th>Actions</th></tr>
+        </thead>
+        <tbody id="tripsTableBody"></tbody>
+      </table>
+    </div>
+
+    <div id="densityWrap" hidden>
+      <div id="densityMap"></div>
+      <p style="color:var(--slate);font-size:12.5px;margin-top:10px;">Every recorded ping from every active trip, clustered by proximity.</p>
+    </div>
+  </main>
+
+  <footer class="app-footer">
+    <div class="wrap">
+      <div class="foot-top">
+        <a href="/" class="app-logo"><i data-lucide="truck" style="width:20px;height:20px;color:#f97316;"></i>LOAD24.in</a>
+        <div class="badge badge-green">🟢 All India Services</div>
+      </div>
+      <p class="copyright">© 2026 LOAD24. All rights reserved.</p>
+      <div class="foot-links">
+        <a href="/delete-account/">Delete Account</a><span>|</span>
+        <a href="/PrivacyPolicy/">Privacy Policy</a><span>|</span>
+        <a href="/">Main Site</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    let trips = [];
+    const pingsCache = new Map(); // load_id -> pings array, fetched lazily
+    const perTripMaps = new Map(); // load_id -> Leaflet map instance, kept so re-expanding doesn't re-init
+    let densityMap = null;
+    let densityMode = false;
+
+    const errorEl = document.getElementById('tripsError');
+    const loadingEl = document.getElementById('tripsLoading');
+    const emptyEl = document.getElementById('tripsEmpty');
+    const tableWrapEl = document.getElementById('tripsTableWrap');
+    const tableBodyEl = document.getElementById('tripsTableBody');
+    const countEl = document.getElementById('tripsCount');
+    const densityWrapEl = document.getElementById('densityWrap');
+    const densityToggleBtn = document.getElementById('densityToggleBtn');
+
+    function partyHtml(profile, fallbackEmail) {
+      if (!profile && !fallbackEmail) return '—';
+      return `<div class="trips-party">
+        <div class="name">${escapeHtml(profile?.full_name || fallbackEmail || 'Unknown')}</div>
+        ${profile?.mobile ? `<div class="mobile">${escapeHtml(profile.mobile)}</div>` : ''}
+      </div>`;
+    }
+
+    function renderRow(trip) {
+      const load = trip.load;
+      const route = [load.loading_city, load.unloading_city].filter(Boolean).join(' → ') || '—';
+      return `
+        <tr data-load-id="${escapeHtml(load.id)}">
+          <td class="strong">${escapeHtml(load.material_type || 'Load')}<br><span style="font-weight:400;color:var(--slate-light);font-size:12px;">${escapeHtml(route)}</span></td>
+          <td>${partyHtml(trip.poster, load.posted_by)}</td>
+          <td>${partyHtml(trip.accepter, trip.bid?.bid_by_email)}</td>
+          <td>${trip.bid ? formatInr(trip.bid.amount) : '—'}</td>
+          <td><span class="badge ${load.status === 'in_transit' ? 'badge-blue' : 'badge-orange'}">${escapeHtml(titleCase(load.status))}</span></td>
+          <td>
+            <div class="trips-row-actions">
+              <button class="btn btn-outline-slate btn-sm" data-action="toggle-map"><i data-lucide="map-pin" style="width:13px;height:13px;"></i> Map</button>
+              <button class="btn btn-outline-slate btn-sm" style="color:#dc2626;border-color:#fecaca;" data-action="toggle-cancel">Cancel Trip</button>
+            </div>
+            <div class="trips-cancel-panel" hidden>
+              <textarea placeholder="Reason (optional)"></textarea>
+              <div class="actions">
+                <button class="btn btn-outline-slate btn-sm" data-action="cancel-dismiss">Dismiss</button>
+                <button class="btn btn-sm" style="background:#dc2626;color:#fff;" data-action="confirm-cancel">Confirm Cancel</button>
+              </div>
+            </div>
+            <div class="trips-row-error" hidden></div>
+          </td>
+        </tr>
+        <tr class="trip-map-row" data-map-row-for="${escapeHtml(load.id)}" hidden>
+          <td colspan="6"><div class="trip-map" id="map-${escapeHtml(load.id)}"></div></td>
+        </tr>`;
+    }
+
+    async function loadTrips() {
+      loadingEl.hidden = false;
+      errorEl.hidden = true;
+      emptyEl.hidden = true;
+      tableWrapEl.hidden = true;
+
+      try {
+        const res = await adminApiFetch('/api/admin/trips');
+        if (res.status === 403) throw new Error(NO_STAFF_ROLE_MESSAGE);
+        const body = await res.json();
+        if (!res.ok) throw new Error(body.error || `Request failed (${res.status})`);
+
+        trips = body;
+        loadingEl.hidden = true;
+        countEl.textContent = `${trips.length} active trip${trips.length === 1 ? '' : 's'}`;
+
+        if (!trips.length) {
+          emptyEl.hidden = false;
+          return;
+        }
+
+        tableBodyEl.innerHTML = trips.map(renderRow).join('');
+        tableWrapEl.hidden = false;
+        lucide.createIcons();
+      } catch (err) {
+        loadingEl.hidden = true;
+        errorEl.textContent = err.message;
+        errorEl.hidden = false;
+      }
+    }
+
+    async function fetchPings(loadId) {
+      if (pingsCache.has(loadId)) return pingsCache.get(loadId);
+      const res = await adminApiFetch(`/api/admin/trips/${loadId}/pings`);
+      const body = await res.json();
+      if (!res.ok) throw new Error(body.error || 'Could not load pings');
+      pingsCache.set(loadId, body);
+      return body;
+    }
+
+    async function showTripMap(loadId, mapRow) {
+      const container = document.getElementById(`map-${loadId}`);
+      let pings;
+      try {
+        pings = await fetchPings(loadId);
+      } catch (err) {
+        container.innerHTML = `<div class="trip-map-note">${escapeHtml(err.message)}</div>`;
+        return;
+      }
+
+      if (!pings.length) {
+        container.innerHTML = '<div class="trip-map-note">No location pings recorded for this trip yet.</div>';
+        return;
+      }
+
+      // Re-expanding a previously-shown trip reuses its map instance rather
+      // than re-creating one — Leaflet errors if you initialize a map on a
+      // container that's already been initialized once.
+      let map = perTripMaps.get(loadId);
+      if (!map) {
+        map = L.map(container);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '&copy; OpenStreetMap contributors',
+          maxZoom: 19
+        }).addTo(map);
+        perTripMaps.set(loadId, map);
+      }
+
+      const latlngs = pings.map((p) => [p.lat, p.lng]);
+      L.polyline(latlngs, { color: '#f97316', weight: 3 }).addTo(map);
+      L.circleMarker(latlngs[0], { radius: 6, color: '#16a34a', fillOpacity: 1 }).addTo(map).bindTooltip('Start');
+      L.marker(latlngs[latlngs.length - 1]).addTo(map).bindTooltip('Latest ping').openTooltip();
+      map.fitBounds(latlngs, { padding: [24, 24] });
+      // Leaflet can't size itself correctly while its container was
+      // display:none (as it was until this row was expanded) — nudge it
+      // once the container has real dimensions.
+      setTimeout(() => map.invalidateSize(), 0);
+    }
+
+    tableBodyEl.addEventListener('click', async (e) => {
+      const btn = e.target.closest('button[data-action]');
+      if (!btn) return;
+      const row = btn.closest('tr[data-load-id]');
+      const loadId = row.dataset.loadId;
+      const action = btn.dataset.action;
+
+      if (action === 'toggle-map') {
+        const mapRow = document.querySelector(`tr.trip-map-row[data-map-row-for="${CSS.escape(loadId)}"]`);
+        const opening = mapRow.hidden;
+        mapRow.hidden = !opening;
+        if (opening) await showTripMap(loadId, mapRow);
+        return;
+      }
+
+      if (action === 'toggle-cancel') {
+        row.querySelector('.trips-cancel-panel').hidden = false;
+        return;
+      }
+      if (action === 'cancel-dismiss') {
+        row.querySelector('.trips-cancel-panel').hidden = true;
+        return;
+      }
+
+      if (action === 'confirm-cancel') {
+        const reason = row.querySelector('.trips-cancel-panel textarea').value.trim();
+        const errorBox = row.querySelector('.trips-row-error');
+        row.querySelectorAll('button').forEach((b) => { b.disabled = true; });
+        try {
+          const res = await adminApiFetch(`/api/admin/trips/${loadId}/cancel`, {
+            method: 'POST',
+            body: JSON.stringify({ reason })
+          });
+          const body = await res.json();
+          if (!res.ok) throw new Error(body.error || 'Could not cancel this trip');
+          await loadTrips(); // trip is no longer matched/in_transit — drops out of this list
+        } catch (err) {
+          row.querySelectorAll('button').forEach((b) => { b.disabled = false; });
+          errorBox.textContent = err.message;
+          errorBox.hidden = false;
+        }
+      }
+    });
+
+    async function showDensityView() {
+      tableWrapEl.hidden = true;
+      document.querySelector('.trips-toolbar + #tripsEmpty')?.setAttribute('hidden', '');
+      densityWrapEl.hidden = false;
+
+      if (!densityMap) {
+        densityMap = L.map('densityMap');
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '&copy; OpenStreetMap contributors',
+          maxZoom: 19
+        }).addTo(densityMap);
+      }
+
+      const cluster = L.markerClusterGroup();
+      const allLatLngs = [];
+      const pingsPerTrip = await Promise.all(
+        trips.map((trip) => fetchPings(trip.load.id).catch(() => []))
+      );
+      pingsPerTrip.forEach((pings, i) => {
+        const trip = trips[i];
+        pings.forEach((p) => {
+          const marker = L.marker([p.lat, p.lng]).bindTooltip(
+            `${trip.load.material_type || 'Load'} — ${formatDate(p.recorded_at)}`
+          );
+          cluster.addLayer(marker);
+          allLatLngs.push([p.lat, p.lng]);
+        });
+      });
+
+      densityMap.eachLayer((layer) => {
+        if (layer instanceof L.MarkerClusterGroup) densityMap.removeLayer(layer);
+      });
+      densityMap.addLayer(cluster);
+
+      if (allLatLngs.length) {
+        densityMap.fitBounds(allLatLngs, { padding: [24, 24] });
+      } else {
+        densityMap.setView([22.9734, 78.6569], 5); // India, roughly centered — no pings to fit to yet
+      }
+      setTimeout(() => densityMap.invalidateSize(), 0);
+    }
+
+    densityToggleBtn.addEventListener('click', async () => {
+      densityMode = !densityMode;
+      densityToggleBtn.innerHTML = densityMode
+        ? '<i data-lucide="table" style="width:14px;height:14px;"></i> Table View'
+        : '<i data-lucide="map" style="width:14px;height:14px;"></i> Density View';
+      lucide.createIcons();
+
+      if (densityMode) {
+        await showDensityView();
+      } else {
+        densityWrapEl.hidden = true;
+        if (trips.length) tableWrapEl.hidden = false;
+        else emptyEl.hidden = false;
+      }
+    });
+
+    (async function init() {
+      const session = await requireStaffSession();
+      if (!session) return; // already redirected to /admin/login/
+      await initAdminNav();
+      lucide.createIcons();
+      await loadTrips();
+    })();
+
+    const burgerBtn = document.getElementById('burgerBtn');
+    const mobileMenu = document.getElementById('mobileMenu');
+    burgerBtn.addEventListener('click', () => {
+      mobileMenu.classList.toggle('open');
+      burgerBtn.innerHTML = mobileMenu.classList.contains('open') ? '<i data-lucide="x"></i>' : '<i data-lucide="menu"></i>';
+      lucide.createIcons();
+    });
+  </script>
+</body>
+
+</html>

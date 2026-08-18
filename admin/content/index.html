@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Content — LOAD24 Admin</title>
+  <meta name="robots" content="noindex, nofollow" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  <link rel="stylesheet" href="../../css/app-theme.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="../js/admin-shared.js"></script>
+  <style>
+    .app-nav-links { flex-wrap: wrap; row-gap: 6px; }
+
+    .admin-wrap { max-width: 1080px; margin: 0 auto; padding: 48px 20px 80px; }
+    .admin-wrap h1 { font-size: 26px; margin: 0 0 8px; }
+    .admin-wrap p.sub { color: var(--slate); font-size: 14.5px; margin: 0 0 24px; }
+
+    .cb-tabs { display: flex; gap: 8px; margin-bottom: 20px; border-bottom: 1px solid var(--slate-200); }
+    .cb-tab {
+      padding: 10px 18px; font-weight: 700; font-size: 14px; color: var(--slate);
+      border-bottom: 2px solid transparent; cursor: pointer; background: none; border-top: none; border-left: none; border-right: none;
+    }
+    .cb-tab.active { color: var(--brand); border-bottom-color: var(--brand); }
+
+    .admin-error {
+      background: #fee2e2; color: #b91c1c; font-size: 13.5px; font-weight: 600;
+      padding: 14px 16px; border-radius: 12px; margin-bottom: 20px; line-height: 1.5;
+    }
+    .admin-loading, .admin-empty {
+      text-align: center; color: var(--slate); font-size: 14px; padding: 60px 20px;
+      background: var(--slate-50); border-radius: var(--radius-md);
+    }
+
+    .cb-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+
+    .cb-editor {
+      background: var(--white); border: 1px solid var(--slate-200); border-radius: var(--radius-md);
+      box-shadow: var(--shadow-soft); padding: 22px; margin-bottom: 20px;
+    }
+    .cb-editor h2 { font-size: 17px; margin: 0 0 4px; }
+    .cb-editor p.hint { color: var(--slate); font-size: 12.5px; margin: 0 0 16px; }
+    .cb-editor .field-row { display: flex; gap: 14px; }
+    .cb-editor .field { margin-bottom: 14px; flex: 1; }
+    .cb-editor textarea { min-height: 140px; resize: vertical; font-family: monospace; font-size: 13px; }
+    .cb-editor .checkbox-field { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+    .cb-editor .checkbox-field input { width: auto; }
+    .cb-editor .actions { display: flex; gap: 10px; margin-top: 4px; }
+
+    .cb-table-wrap { overflow-x: auto; background: var(--white); border: 1px solid var(--slate-200); border-radius: var(--radius-md); box-shadow: var(--shadow-soft); }
+    table.cb-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+    table.cb-table th {
+      text-align: left; background: var(--slate-50); color: var(--ink); font-weight: 700;
+      padding: 12px 14px; border-bottom: 2px solid var(--slate-200); white-space: nowrap;
+    }
+    table.cb-table td { padding: 12px 14px; border-bottom: 1px solid var(--slate-200); color: var(--slate); vertical-align: top; }
+    table.cb-table tr:last-child > td { border-bottom: none; }
+    table.cb-table td.strong { color: var(--ink); font-weight: 600; }
+    .cb-payload-preview { max-width: 340px; white-space: pre-wrap; font-family: monospace; font-size: 12px; word-break: break-word; }
+  </style>
+</head>
+
+<body class="app-theme">
+  <header class="app-nav" id="siteNav">
+    <div class="wrap app-nav-inner">
+      <a href="/admin/" class="app-logo">
+        <i data-lucide="shield-check" style="width:20px;height:20px;color:#f97316;"></i>LOAD<span>24</span>
+        <span style="color:#94a3b8;font-weight:600;font-size:13px;margin-left:4px;">Admin</span>
+      </a>
+      <nav class="app-nav-links">
+        <a href="/admin/">Dashboard</a>
+        <a href="/admin/kyc/">KYC Queue</a>
+        <a href="/admin/trucks/">Truck KYC</a>
+        <a href="/admin/withdrawals/">Withdrawals</a>
+        <a href="/admin/moderation/">Moderation</a>
+        <a href="/admin/trips/">Trips</a>
+        <a href="/admin/notifications/">Notifications</a>
+        <a href="/admin/users/">Users</a>
+        <a href="/admin/risk/">Risk</a>
+        <a href="/admin/content/" class="active">Content</a>
+        <a href="/admin/master-data/">Master Data</a>
+        <a href="/admin/audit-log/">Audit Log</a>
+      </nav>
+      <div class="app-nav-actions">
+        <span id="staffEmail" style="color:#94a3b8;font-size:13px;"></span>
+        <button class="btn btn-ghost-white btn-sm" id="signOutBtn"><i data-lucide="log-out" style="width:15px;height:15px;"></i> Sign Out</button>
+        <button class="app-burger" id="burgerBtn" aria-label="Open menu"><i data-lucide="menu"></i></button>
+      </div>
+    </div>
+    <div class="app-mobile-menu" id="mobileMenu">
+      <a href="/admin/">Dashboard</a>
+      <a href="/admin/kyc/">KYC Queue</a>
+      <a href="/admin/trucks/">Truck KYC</a>
+      <a href="/admin/withdrawals/">Withdrawals</a>
+      <a href="/admin/moderation/">Moderation</a>
+      <a href="/admin/trips/">Trips</a>
+      <a href="/admin/notifications/">Notifications</a>
+      <a href="/admin/users/">Users</a>
+      <a href="/admin/risk/">Risk</a>
+      <a href="/admin/content/">Content</a>
+      <a href="/admin/master-data/">Master Data</a>
+      <a href="/admin/audit-log/">Audit Log</a>
+    </div>
+  </header>
+
+  <main class="admin-wrap">
+    <h1>Content</h1>
+    <p class="sub">Banners, FAQs, and config blocks — read by the mobile app on launch via GET /api/app-config.</p>
+
+    <div class="cb-tabs">
+      <button class="cb-tab active" data-tab="banner">Banners</button>
+      <button class="cb-tab" data-tab="faq">FAQs</button>
+      <button class="cb-tab" data-tab="config">Config</button>
+    </div>
+
+    <div class="cb-toolbar">
+      <span style="font-size:12.5px;color:var(--slate);">Only <strong>active</strong> blocks are sent to the app. Payload is free-form JSON — its shape is whatever the app expects for this block's key.</span>
+      <button class="btn btn-brand btn-sm" id="newBlockBtn"><i data-lucide="plus" style="width:14px;height:14px;"></i> New Block</button>
+    </div>
+
+    <div class="cb-editor" id="cbEditor" hidden>
+      <h2 id="cbEditorTitle">New Block</h2>
+      <p class="hint">Key is what the app looks the block up by — e.g. <code>home_banner</code>, <code>shipping_faq</code>, <code>min_load_amount</code>. Payload must be valid JSON (an object, e.g. <code>{}</code> if there's nothing to configure yet).</p>
+      <div class="field-row">
+        <div class="field">
+          <label>Key</label>
+          <input type="text" id="cbKey" placeholder="e.g. home_banner" />
+        </div>
+      </div>
+      <div class="field">
+        <label>Payload (JSON)</label>
+        <textarea id="cbPayload">{}</textarea>
+      </div>
+      <div class="checkbox-field">
+        <input type="checkbox" id="cbIsActive" checked />
+        <label for="cbIsActive" style="margin:0;">Active (sent to the app)</label>
+      </div>
+      <div id="cbEditorError" class="admin-error" hidden></div>
+      <div class="actions">
+        <button class="btn btn-outline-slate btn-sm" id="cbCancelBtn">Cancel</button>
+        <button class="btn btn-brand btn-sm" id="cbSaveBtn">Save Block</button>
+      </div>
+    </div>
+
+    <div id="cbError" class="admin-error" hidden></div>
+    <div id="cbLoading" class="admin-loading">Loading…</div>
+    <div id="cbEmpty" class="admin-empty" hidden>No blocks yet — create one above.</div>
+    <div id="cbTableWrap" class="cb-table-wrap" hidden>
+      <table class="cb-table">
+        <thead><tr><th>Key</th><th>Active</th><th>Payload</th><th>Updated</th><th></th></tr></thead>
+        <tbody id="cbTableBody"></tbody>
+      </table>
+    </div>
+  </main>
+
+  <footer class="app-footer">
+    <div class="wrap">
+      <div class="foot-top">
+        <a href="/" class="app-logo"><i data-lucide="truck" style="width:20px;height:20px;color:#f97316;"></i>LOAD24.in</a>
+        <div class="badge badge-green">🟢 All India Services</div>
+      </div>
+      <p class="copyright">© 2026 LOAD24. All rights reserved.</p>
+      <div class="foot-links">
+        <a href="/delete-account/">Delete Account</a><span>|</span>
+        <a href="/PrivacyPolicy/">Privacy Policy</a><span>|</span>
+        <a href="/">Main Site</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // One content_blocks type per tab — matches the check constraint on
+    // content_blocks.type (040_add_content_blocks_and_app_versions.sql).
+    let activeType = 'banner';
+    let editingId = null;
+    let blocksData = [];
+
+    const cbEditor = document.getElementById('cbEditor');
+    const cbEditorTitle = document.getElementById('cbEditorTitle');
+    const cbKey = document.getElementById('cbKey');
+    const cbPayload = document.getElementById('cbPayload');
+    const cbIsActive = document.getElementById('cbIsActive');
+    const cbEditorError = document.getElementById('cbEditorError');
+    const cbError = document.getElementById('cbError');
+    const cbLoading = document.getElementById('cbLoading');
+    const cbEmpty = document.getElementById('cbEmpty');
+    const cbTableWrap = document.getElementById('cbTableWrap');
+    const cbTableBody = document.getElementById('cbTableBody');
+
+    function openEditor(block) {
+      editingId = block ? block.id : null;
+      cbEditorTitle.textContent = block ? 'Edit Block' : `New ${titleCase(activeType)} Block`;
+      cbKey.value = block?.key || '';
+      cbPayload.value = block ? JSON.stringify(block.payload ?? {}, null, 2) : '{}';
+      cbIsActive.checked = block ? !!block.is_active : true;
+      cbEditorError.hidden = true;
+      cbEditor.hidden = false;
+      cbEditor.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+    function closeEditor() {
+      editingId = null;
+      cbEditor.hidden = true;
+    }
+
+    function renderRow(b) {
+      return `
+        <tr data-id="${escapeHtml(b.id)}">
+          <td class="strong">${escapeHtml(b.key)}</td>
+          <td>${b.is_active ? '<span class="badge badge-green">Active</span>' : '<span class="badge badge-slate">Inactive</span>'}</td>
+          <td class="cb-payload-preview">${escapeHtml(JSON.stringify(b.payload ?? {}, null, 2))}</td>
+          <td>${formatDate(b.updated_at)}</td>
+          <td>
+            <div style="display:flex;gap:6px;">
+              <button class="btn btn-outline-slate btn-sm" data-action="edit">Edit</button>
+              <button class="btn btn-outline-slate btn-sm" style="color:#dc2626;border-color:#fecaca;" data-action="delete">Delete</button>
+            </div>
+          </td>
+        </tr>`;
+    }
+
+    async function loadBlocks() {
+      cbLoading.hidden = false;
+      cbError.hidden = true;
+      cbEmpty.hidden = true;
+      cbTableWrap.hidden = true;
+      try {
+        const res = await adminApiFetch(`/api/admin/content-blocks?type=${activeType}`);
+        if (res.status === 403) throw new Error(NO_STAFF_ROLE_MESSAGE);
+        const body = await res.json();
+        if (!res.ok) throw new Error(body.error || `Request failed (${res.status})`);
+
+        blocksData = body;
+        cbLoading.hidden = true;
+        if (!body.length) {
+          cbEmpty.hidden = false;
+          return;
+        }
+        cbTableBody.innerHTML = body.map(renderRow).join('');
+        cbTableWrap.hidden = false;
+      } catch (err) {
+        cbLoading.hidden = true;
+        cbError.textContent = err.message;
+        cbError.hidden = false;
+      }
+    }
+
+    document.getElementById('newBlockBtn').addEventListener('click', () => openEditor(null));
+    document.getElementById('cbCancelBtn').addEventListener('click', closeEditor);
+
+    document.getElementById('cbSaveBtn').addEventListener('click', async () => {
+      cbEditorError.hidden = true;
+
+      const key = cbKey.value.trim();
+      if (!key) {
+        cbEditorError.textContent = 'Key is required';
+        cbEditorError.hidden = false;
+        return;
+      }
+      let payload;
+      try {
+        payload = JSON.parse(cbPayload.value);
+      } catch {
+        cbEditorError.textContent = 'Payload is not valid JSON';
+        cbEditorError.hidden = false;
+        return;
+      }
+
+      const body = { key, payload, is_active: cbIsActive.checked };
+      if (!editingId) body.type = activeType;
+
+      try {
+        const path = editingId ? `/api/admin/content-blocks/${editingId}` : '/api/admin/content-blocks';
+        const res = await adminApiFetch(path, { method: editingId ? 'PATCH' : 'POST', body: JSON.stringify(body) });
+        const resBody = await res.json();
+        if (!res.ok) throw new Error(resBody.error || 'Could not save this block');
+        closeEditor();
+        await loadBlocks();
+      } catch (err) {
+        cbEditorError.textContent = err.message;
+        cbEditorError.hidden = false;
+      }
+    });
+
+    cbTableBody.addEventListener('click', async (e) => {
+      const btn = e.target.closest('button[data-action]');
+      if (!btn) return;
+      const id = btn.closest('tr').dataset.id;
+      const action = btn.dataset.action;
+
+      if (action === 'edit') {
+        openEditor(blocksData.find((b) => b.id === id));
+        return;
+      }
+      if (action === 'delete') {
+        if (!confirm('Delete this block? This cannot be undone.')) return;
+        btn.disabled = true;
+        try {
+          const res = await adminApiFetch(`/api/admin/content-blocks/${id}`, { method: 'DELETE' });
+          if (!res.ok && res.status !== 204) {
+            const resBody = await res.json().catch(() => ({}));
+            throw new Error(resBody.error || 'Could not delete this block');
+          }
+          await loadBlocks();
+        } catch (err) {
+          btn.disabled = false;
+          alert(err.message);
+        }
+      }
+    });
+
+    document.querySelectorAll('.cb-tab').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.cb-tab').forEach((b) => b.classList.toggle('active', b === btn));
+        activeType = btn.dataset.tab;
+        closeEditor();
+        loadBlocks();
+      });
+    });
+
+    (async function init() {
+      const session = await requireStaffSession();
+      if (!session) return; // already redirected to /admin/login/
+      await initAdminNav();
+      lucide.createIcons();
+      await loadBlocks();
+    })();
+
+    const burgerBtn = document.getElementById('burgerBtn');
+    const mobileMenu = document.getElementById('mobileMenu');
+    burgerBtn.addEventListener('click', () => {
+      mobileMenu.classList.toggle('open');
+      burgerBtn.innerHTML = mobileMenu.classList.contains('open') ? '<i data-lucide="x"></i>' : '<i data-lucide="menu"></i>';
+      lucide.createIcons();
+    });
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Risk Signals — LOAD24 Admin</title>
+  <meta name="robots" content="noindex, nofollow" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  <link rel="stylesheet" href="../../css/app-theme.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="../js/admin-shared.js"></script>
+  <style>
+    .app-nav-links { flex-wrap: wrap; row-gap: 6px; }
+
+    .admin-wrap { max-width: 1180px; margin: 0 auto; padding: 48px 20px 80px; }
+    .admin-wrap h1 { font-size: 26px; margin: 0 0 8px; }
+    .admin-wrap p.sub { color: var(--slate); font-size: 14.5px; margin: 0 0 24px; }
+
+    .admin-error {
+      background: #fee2e2; color: #b91c1c; font-size: 13.5px; font-weight: 600;
+      padding: 14px 16px; border-radius: 12px; margin-bottom: 20px; line-height: 1.5;
+    }
+    .admin-loading, .admin-empty {
+      text-align: center; color: var(--slate); font-size: 14px; padding: 60px 20px;
+      background: var(--slate-50); border-radius: var(--radius-md);
+    }
+
+    .risk-table-wrap { overflow-x: auto; background: var(--white); border: 1px solid var(--slate-200); border-radius: var(--radius-md); box-shadow: var(--shadow-soft); }
+    table.risk-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+    table.risk-table th {
+      text-align: left; background: var(--slate-50); color: var(--ink); font-weight: 700;
+      padding: 12px 14px; border-bottom: 2px solid var(--slate-200); white-space: nowrap;
+    }
+    table.risk-table th.sortable { cursor: pointer; user-select: none; }
+    table.risk-table th.sortable:hover { color: var(--brand); }
+    table.risk-table th .sort-arrow { font-size: 11px; margin-left: 3px; color: var(--slate-light); }
+    table.risk-table th.sort-active .sort-arrow { color: var(--brand); }
+    table.risk-table td { padding: 12px 14px; border-bottom: 1px solid var(--slate-200); color: var(--slate); vertical-align: middle; }
+    table.risk-table tr:last-child td { border-bottom: none; }
+    table.risk-table td.strong { color: var(--ink); font-weight: 600; }
+    .risk-name a { color: var(--brand); font-weight: 700; }
+    .risk-mobile { color: var(--slate-light); font-size: 12px; }
+    .risk-score-pill {
+      display: inline-flex; align-items: center; justify-content: center;
+      min-width: 40px; padding: 4px 10px; border-radius: 999px; font-weight: 800; font-size: 13px;
+    }
+  </style>
+</head>
+
+<body class="app-theme">
+  <header class="app-nav" id="siteNav">
+    <div class="wrap app-nav-inner">
+      <a href="/admin/" class="app-logo">
+        <i data-lucide="shield-check" style="width:20px;height:20px;color:#f97316;"></i>LOAD<span>24</span>
+        <span style="color:#94a3b8;font-weight:600;font-size:13px;margin-left:4px;">Admin</span>
+      </a>
+      <nav class="app-nav-links">
+        <a href="/admin/">Dashboard</a>
+        <a href="/admin/kyc/">KYC Queue</a>
+        <a href="/admin/trucks/">Truck KYC</a>
+        <a href="/admin/withdrawals/">Withdrawals</a>
+        <a href="/admin/moderation/">Moderation</a>
+        <a href="/admin/trips/">Trips</a>
+        <a href="/admin/notifications/">Notifications</a>
+        <a href="/admin/users/">Users</a>
+        <a href="/admin/risk/" class="active">Risk</a>
+        <a href="/admin/content/">Content</a>
+        <a href="/admin/master-data/">Master Data</a>
+        <a href="/admin/audit-log/">Audit Log</a>
+      </nav>
+      <div class="app-nav-actions">
+        <span id="staffEmail" style="color:#94a3b8;font-size:13px;"></span>
+        <button class="btn btn-ghost-white btn-sm" id="signOutBtn"><i data-lucide="log-out" style="width:15px;height:15px;"></i> Sign Out</button>
+        <button class="app-burger" id="burgerBtn" aria-label="Open menu"><i data-lucide="menu"></i></button>
+      </div>
+    </div>
+    <div class="app-mobile-menu" id="mobileMenu">
+      <a href="/admin/">Dashboard</a>
+      <a href="/admin/kyc/">KYC Queue</a>
+      <a href="/admin/trucks/">Truck KYC</a>
+      <a href="/admin/withdrawals/">Withdrawals</a>
+      <a href="/admin/moderation/">Moderation</a>
+      <a href="/admin/trips/">Trips</a>
+      <a href="/admin/notifications/">Notifications</a>
+      <a href="/admin/users/">Users</a>
+      <a href="/admin/risk/">Risk</a>
+      <a href="/admin/content/">Content</a>
+      <a href="/admin/master-data/">Master Data</a>
+      <a href="/admin/audit-log/">Audit Log</a>
+    </div>
+  </header>
+
+  <main class="admin-wrap">
+    <h1>Risk Signals</h1>
+    <p class="sub">Every user with a profile, ranked by a computed risk score — low trust, cancellation rate, and KYC mismatches. Click a column to sort.</p>
+
+    <div id="riskError" class="admin-error" hidden></div>
+    <div id="riskLoading" class="admin-loading">Loading…</div>
+    <div id="riskEmpty" class="admin-empty" hidden>No users to show.</div>
+    <div id="riskTableWrap" class="risk-table-wrap" hidden>
+      <table class="risk-table">
+        <thead>
+          <tr>
+            <th>User</th>
+            <th>City</th>
+            <th>Type</th>
+            <th>KYC</th>
+            <th class="sortable" data-sort="trust_score">Trust <span class="sort-arrow">▾</span></th>
+            <th class="sortable" data-sort="cancelled_loads">Cancelled Loads <span class="sort-arrow">▾</span></th>
+            <th class="sortable" data-sort="rejected_bids">Rejected Bids <span class="sort-arrow">▾</span></th>
+            <th class="sortable sort-active" data-sort="risk_score">Risk Score <span class="sort-arrow">▾</span></th>
+          </tr>
+        </thead>
+        <tbody id="riskTableBody"></tbody>
+      </table>
+    </div>
+  </main>
+
+  <footer class="app-footer">
+    <div class="wrap">
+      <div class="foot-top">
+        <a href="/" class="app-logo"><i data-lucide="truck" style="width:20px;height:20px;color:#f97316;"></i>LOAD24.in</a>
+        <div class="badge badge-green">🟢 All India Services</div>
+      </div>
+      <p class="copyright">© 2026 LOAD24. All rights reserved.</p>
+      <div class="foot-links">
+        <a href="/delete-account/">Delete Account</a><span>|</span>
+        <a href="/PrivacyPolicy/">Privacy Policy</a><span>|</span>
+        <a href="/">Main Site</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    let rows = [];
+    let sortField = 'risk_score';
+    let sortAscending = false; // riskiest first by default, matching the API's own order
+
+    const errorEl = document.getElementById('riskError');
+    const loadingEl = document.getElementById('riskLoading');
+    const emptyEl = document.getElementById('riskEmpty');
+    const tableWrapEl = document.getElementById('riskTableWrap');
+    const tableBodyEl = document.getElementById('riskTableBody');
+
+    function riskColor(score) {
+      if (score >= 50) return '#fee2e2, #b91c1c'; // background, text
+      if (score >= 20) return '#ffedd5, #c2410c';
+      return '#f1f5f9, #475569';
+    }
+
+    function renderRow(row) {
+      const [bg, fg] = riskColor(row.risk_score).split(', ');
+      return `
+        <tr>
+          <td>
+            <div class="risk-name"><a href="/admin/users/?q=${encodeURIComponent(row.mobile || row.full_name || '')}">${escapeHtml(row.full_name || 'Unknown')}</a></div>
+            <div class="risk-mobile">${escapeHtml(row.mobile || '—')}</div>
+          </td>
+          <td>${escapeHtml(row.city || '—')}</td>
+          <td>${escapeHtml(titleCase(row.user_type))}</td>
+          <td>
+            <span class="badge ${row.kyc_mismatch ? 'badge-red' : row.kyc_status === 'verified' ? 'badge-green' : 'badge-slate'}">${escapeHtml(titleCase(row.kyc_status))}</span>
+            ${row.kyc_mismatch ? '<div style="font-size:11px;color:#b91c1c;margin-top:3px;">Active without verified KYC</div>' : ''}
+          </td>
+          <td class="strong">${escapeHtml(row.trust_score)}</td>
+          <td>${row.cancelled_loads} <span style="color:var(--slate-light);">/ ${row.total_loads}</span></td>
+          <td>${row.rejected_bids} <span style="color:var(--slate-light);">/ ${row.total_bids}</span></td>
+          <td><span class="risk-score-pill" style="background:${bg};color:${fg};">${Math.round(row.risk_score)}</span></td>
+        </tr>`;
+    }
+
+    function renderTable() {
+      const sorted = [...rows].sort((a, b) => {
+        const diff = (a[sortField] ?? 0) - (b[sortField] ?? 0);
+        return sortAscending ? diff : -diff;
+      });
+      tableBodyEl.innerHTML = sorted.map(renderRow).join('');
+      lucide.createIcons();
+    }
+
+    document.querySelectorAll('th.sortable').forEach((th) => {
+      th.addEventListener('click', () => {
+        const field = th.dataset.sort;
+        if (sortField === field) {
+          sortAscending = !sortAscending;
+        } else {
+          sortField = field;
+          sortAscending = false;
+        }
+        document.querySelectorAll('th.sortable').forEach((h) => {
+          h.classList.toggle('sort-active', h === th);
+          h.querySelector('.sort-arrow').textContent = h === th ? (sortAscending ? '▴' : '▾') : '▾';
+        });
+        renderTable();
+      });
+    });
+
+    async function loadRisk() {
+      loadingEl.hidden = false;
+      errorEl.hidden = true;
+      emptyEl.hidden = true;
+      tableWrapEl.hidden = true;
+
+      try {
+        const res = await adminApiFetch('/api/admin/risk');
+        if (res.status === 403) throw new Error(NO_STAFF_ROLE_MESSAGE);
+        const body = await res.json();
+        if (!res.ok) throw new Error(body.error || `Request failed (${res.status})`);
+
+        rows = body;
+        loadingEl.hidden = true;
+        if (!rows.length) {
+          emptyEl.hidden = false;
+          return;
+        }
+        renderTable();
+        tableWrapEl.hidden = false;
+      } catch (err) {
+        loadingEl.hidden = true;
+        errorEl.textContent = err.message;
+        errorEl.hidden = false;
+      }
+    }
+
+    (async function init() {
+      const session = await requireStaffSession();
+      if (!session) return; // already redirected to /admin/login/
+      await initAdminNav();
+      lucide.createIcons();
+      await loadRisk();
+    })();
+
+    const burgerBtn = document.getElementById('burgerBtn');
+    const mobileMenu = document.getElementById('mobileMenu');
+    burgerBtn.addEventListener('click', () => {
+      mobileMenu.classList.toggle('open');
+      burgerBtn.innerHTML = mobileMenu.classList.contains('open') ? '<i data-lucide="x"></i>' : '<i data-lucide="menu"></i>';
+      lucide.createIcons();
+    });
+  </script>
+</body>
+
+</html>

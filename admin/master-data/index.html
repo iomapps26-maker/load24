@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Master Data — LOAD24 Admin</title>
+  <meta name="robots" content="noindex, nofollow" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  <link rel="stylesheet" href="../../css/app-theme.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="../js/admin-shared.js"></script>
+  <style>
+    .app-nav-links { flex-wrap: wrap; row-gap: 6px; }
+
+    .admin-wrap { max-width: 1080px; margin: 0 auto; padding: 48px 20px 80px; }
+    .admin-wrap h1 { font-size: 26px; margin: 0 0 8px; }
+    .admin-wrap p.sub { color: var(--slate); font-size: 14.5px; margin: 0 0 24px; }
+
+    .md-tabs { display: flex; gap: 8px; margin-bottom: 20px; border-bottom: 1px solid var(--slate-200); flex-wrap: wrap; }
+    .md-tab {
+      padding: 10px 16px; font-weight: 700; font-size: 13.5px; color: var(--slate);
+      border-bottom: 2px solid transparent; cursor: pointer; background: none; border-top: none; border-left: none; border-right: none; white-space: nowrap;
+    }
+    .md-tab.active { color: var(--brand); border-bottom-color: var(--brand); }
+
+    .admin-error {
+      background: #fee2e2; color: #b91c1c; font-size: 13.5px; font-weight: 600;
+      padding: 14px 16px; border-radius: 12px; margin-bottom: 20px; line-height: 1.5;
+    }
+    .admin-loading, .admin-empty {
+      text-align: center; color: var(--slate); font-size: 14px; padding: 60px 20px;
+      background: var(--slate-50); border-radius: var(--radius-md);
+    }
+
+    .md-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+
+    .md-editor {
+      background: var(--white); border: 1px solid var(--slate-200); border-radius: var(--radius-md);
+      box-shadow: var(--shadow-soft); padding: 22px; margin-bottom: 20px;
+    }
+    .md-editor h2 { font-size: 17px; margin: 0 0 16px; }
+    .md-editor .field-row { display: flex; gap: 14px; }
+    .md-editor .field { margin-bottom: 14px; flex: 1; }
+    .md-editor .checkbox-field { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+    .md-editor .checkbox-field input { width: auto; }
+    .md-editor .actions { display: flex; gap: 10px; margin-top: 4px; }
+
+    .md-table-wrap { overflow-x: auto; background: var(--white); border: 1px solid var(--slate-200); border-radius: var(--radius-md); box-shadow: var(--shadow-soft); }
+    table.md-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+    table.md-table th {
+      text-align: left; background: var(--slate-50); color: var(--ink); font-weight: 700;
+      padding: 12px 14px; border-bottom: 2px solid var(--slate-200); white-space: nowrap;
+    }
+    table.md-table td { padding: 12px 14px; border-bottom: 1px solid var(--slate-200); color: var(--slate); vertical-align: middle; }
+    table.md-table tr:last-child > td { border-bottom: none; }
+    table.md-table td.strong { color: var(--ink); font-weight: 600; }
+    table.md-table td.mono { font-family: monospace; font-size: 12.5px; }
+  </style>
+</head>
+
+<body class="app-theme">
+  <header class="app-nav" id="siteNav">
+    <div class="wrap app-nav-inner">
+      <a href="/admin/" class="app-logo">
+        <i data-lucide="shield-check" style="width:20px;height:20px;color:#f97316;"></i>LOAD<span>24</span>
+        <span style="color:#94a3b8;font-weight:600;font-size:13px;margin-left:4px;">Admin</span>
+      </a>
+      <nav class="app-nav-links">
+        <a href="/admin/">Dashboard</a>
+        <a href="/admin/kyc/">KYC Queue</a>
+        <a href="/admin/trucks/">Truck KYC</a>
+        <a href="/admin/withdrawals/">Withdrawals</a>
+        <a href="/admin/moderation/">Moderation</a>
+        <a href="/admin/trips/">Trips</a>
+        <a href="/admin/notifications/">Notifications</a>
+        <a href="/admin/users/">Users</a>
+        <a href="/admin/risk/">Risk</a>
+        <a href="/admin/content/">Content</a>
+        <a href="/admin/master-data/" class="active">Master Data</a>
+        <a href="/admin/audit-log/">Audit Log</a>
+      </nav>
+      <div class="app-nav-actions">
+        <span id="staffEmail" style="color:#94a3b8;font-size:13px;"></span>
+        <button class="btn btn-ghost-white btn-sm" id="signOutBtn"><i data-lucide="log-out" style="width:15px;height:15px;"></i> Sign Out</button>
+        <button class="app-burger" id="burgerBtn" aria-label="Open menu"><i data-lucide="menu"></i></button>
+      </div>
+    </div>
+    <div class="app-mobile-menu" id="mobileMenu">
+      <a href="/admin/">Dashboard</a>
+      <a href="/admin/kyc/">KYC Queue</a>
+      <a href="/admin/trucks/">Truck KYC</a>
+      <a href="/admin/withdrawals/">Withdrawals</a>
+      <a href="/admin/moderation/">Moderation</a>
+      <a href="/admin/trips/">Trips</a>
+      <a href="/admin/notifications/">Notifications</a>
+      <a href="/admin/users/">Users</a>
+      <a href="/admin/risk/">Risk</a>
+      <a href="/admin/content/">Content</a>
+      <a href="/admin/master-data/">Master Data</a>
+      <a href="/admin/audit-log/">Audit Log</a>
+    </div>
+  </header>
+
+  <main class="admin-wrap">
+    <h1>Master Data</h1>
+    <p class="sub">Closed-list values the app and admin site read instead of a hardcoded constant. Deactivating a value stops it validating on new writes — it doesn't touch records that already use it.</p>
+
+    <div class="md-tabs">
+      <button class="md-tab active" data-tab="truck_type">Truck Type</button>
+      <button class="md-tab" data-tab="body_type">Body Type</button>
+      <button class="md-tab" data-tab="material_category">Material Category</button>
+      <button class="md-tab" data-tab="cancellation_reason">Cancellation Reason</button>
+      <button class="md-tab" data-tab="support_category">Support Category</button>
+    </div>
+
+    <div class="md-toolbar">
+      <span style="font-size:12.5px;color:var(--slate);">Values here are what <code>trucks.js</code> and other routes validate incoming <code>value</code> fields against.</span>
+      <button class="btn btn-brand btn-sm" id="newValueBtn"><i data-lucide="plus" style="width:14px;height:14px;"></i> New Value</button>
+    </div>
+
+    <div class="md-editor" id="mdEditor" hidden>
+      <h2 id="mdEditorTitle">New Value</h2>
+      <div class="field-row">
+        <div class="field">
+          <label>Value (machine key)</label>
+          <input type="text" id="mdValue" placeholder="e.g. tata_407" />
+        </div>
+        <div class="field">
+          <label>Label (shown to users)</label>
+          <input type="text" id="mdLabel" placeholder="e.g. Tata 407" />
+        </div>
+      </div>
+      <div class="checkbox-field">
+        <input type="checkbox" id="mdIsActive" checked />
+        <label for="mdIsActive" style="margin:0;">Active</label>
+      </div>
+      <div id="mdEditorError" class="admin-error" hidden></div>
+      <div class="actions">
+        <button class="btn btn-outline-slate btn-sm" id="mdCancelBtn">Cancel</button>
+        <button class="btn btn-brand btn-sm" id="mdSaveBtn">Save Value</button>
+      </div>
+    </div>
+
+    <div id="mdError" class="admin-error" hidden></div>
+    <div id="mdLoading" class="admin-loading">Loading…</div>
+    <div id="mdEmpty" class="admin-empty" hidden>No values yet in this category — add one above.</div>
+    <div id="mdTableWrap" class="md-table-wrap" hidden>
+      <table class="md-table">
+        <thead><tr><th>Value</th><th>Label</th><th>Active</th><th></th></tr></thead>
+        <tbody id="mdTableBody"></tbody>
+      </table>
+    </div>
+  </main>
+
+  <footer class="app-footer">
+    <div class="wrap">
+      <div class="foot-top">
+        <a href="/" class="app-logo"><i data-lucide="truck" style="width:20px;height:20px;color:#f97316;"></i>LOAD24.in</a>
+        <div class="badge badge-green">🟢 All India Services</div>
+      </div>
+      <p class="copyright">© 2026 LOAD24. All rights reserved.</p>
+      <div class="foot-links">
+        <a href="/delete-account/">Delete Account</a><span>|</span>
+        <a href="/PrivacyPolicy/">Privacy Policy</a><span>|</span>
+        <a href="/">Main Site</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // One master_data category per tab — matches the check constraint on
+    // master_data.category (041_add_master_data.sql).
+    let activeCategory = 'truck_type';
+    let editingId = null;
+    let valuesData = [];
+
+    const mdEditor = document.getElementById('mdEditor');
+    const mdEditorTitle = document.getElementById('mdEditorTitle');
+    const mdValue = document.getElementById('mdValue');
+    const mdLabel = document.getElementById('mdLabel');
+    const mdIsActive = document.getElementById('mdIsActive');
+    const mdEditorError = document.getElementById('mdEditorError');
+    const mdError = document.getElementById('mdError');
+    const mdLoading = document.getElementById('mdLoading');
+    const mdEmpty = document.getElementById('mdEmpty');
+    const mdTableWrap = document.getElementById('mdTableWrap');
+    const mdTableBody = document.getElementById('mdTableBody');
+
+    function openEditor(row) {
+      editingId = row ? row.id : null;
+      mdEditorTitle.textContent = row ? 'Edit Value' : `New ${titleCase(activeCategory)} Value`;
+      mdValue.value = row?.value || '';
+      mdLabel.value = row?.label || '';
+      mdIsActive.checked = row ? !!row.is_active : true;
+      mdEditorError.hidden = true;
+      mdEditor.hidden = false;
+      mdEditor.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+    function closeEditor() {
+      editingId = null;
+      mdEditor.hidden = true;
+    }
+
+    function renderRow(row) {
+      return `
+        <tr data-id="${escapeHtml(row.id)}">
+          <td class="mono">${escapeHtml(row.value)}</td>
+          <td class="strong">${escapeHtml(row.label)}</td>
+          <td>${row.is_active ? '<span class="badge badge-green">Active</span>' : '<span class="badge badge-slate">Inactive</span>'}</td>
+          <td>
+            <div style="display:flex;gap:6px;">
+              <button class="btn btn-outline-slate btn-sm" data-action="edit">Edit</button>
+              <button class="btn btn-outline-slate btn-sm" style="color:#dc2626;border-color:#fecaca;" data-action="delete">Delete</button>
+            </div>
+          </td>
+        </tr>`;
+    }
+
+    async function loadValues() {
+      mdLoading.hidden = false;
+      mdError.hidden = true;
+      mdEmpty.hidden = true;
+      mdTableWrap.hidden = true;
+      try {
+        const res = await adminApiFetch(`/api/admin/master-data?category=${activeCategory}`);
+        if (res.status === 403) throw new Error(NO_STAFF_ROLE_MESSAGE);
+        const body = await res.json();
+        if (!res.ok) throw new Error(body.error || `Request failed (${res.status})`);
+
+        valuesData = body;
+        mdLoading.hidden = true;
+        if (!body.length) {
+          mdEmpty.hidden = false;
+          return;
+        }
+        mdTableBody.innerHTML = body.map(renderRow).join('');
+        mdTableWrap.hidden = false;
+      } catch (err) {
+        mdLoading.hidden = true;
+        mdError.textContent = err.message;
+        mdError.hidden = false;
+      }
+    }
+
+    document.getElementById('newValueBtn').addEventListener('click', () => openEditor(null));
+    document.getElementById('mdCancelBtn').addEventListener('click', closeEditor);
+
+    document.getElementById('mdSaveBtn').addEventListener('click', async () => {
+      mdEditorError.hidden = true;
+
+      const value = mdValue.value.trim();
+      const label = mdLabel.value.trim();
+      if (!value || !label) {
+        mdEditorError.textContent = 'Both value and label are required';
+        mdEditorError.hidden = false;
+        return;
+      }
+
+      const body = { value, label, is_active: mdIsActive.checked };
+      if (!editingId) body.category = activeCategory;
+
+      try {
+        const path = editingId ? `/api/admin/master-data/${editingId}` : '/api/admin/master-data';
+        const res = await adminApiFetch(path, { method: editingId ? 'PATCH' : 'POST', body: JSON.stringify(body) });
+        const resBody = await res.json();
+        if (!res.ok) throw new Error(resBody.error || 'Could not save this value');
+        closeEditor();
+        await loadValues();
+      } catch (err) {
+        mdEditorError.textContent = err.message;
+        mdEditorError.hidden = false;
+      }
+    });
+
+    mdTableBody.addEventListener('click', async (e) => {
+      const btn = e.target.closest('button[data-action]');
+      if (!btn) return;
+      const id = btn.closest('tr').dataset.id;
+      const action = btn.dataset.action;
+
+      if (action === 'edit') {
+        openEditor(valuesData.find((r) => r.id === id));
+        return;
+      }
+      if (action === 'delete') {
+        if (!confirm('Delete this value? This cannot be undone — deactivating is usually the safer option.')) return;
+        btn.disabled = true;
+        try {
+          const res = await adminApiFetch(`/api/admin/master-data/${id}`, { method: 'DELETE' });
+          if (!res.ok && res.status !== 204) {
+            const resBody = await res.json().catch(() => ({}));
+            throw new Error(resBody.error || 'Could not delete this value');
+          }
+          await loadValues();
+        } catch (err) {
+          btn.disabled = false;
+          alert(err.message);
+        }
+      }
+    });
+
+    document.querySelectorAll('.md-tab').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.md-tab').forEach((b) => b.classList.toggle('active', b === btn));
+        activeCategory = btn.dataset.tab;
+        closeEditor();
+        loadValues();
+      });
+    });
+
+    (async function init() {
+      const session = await requireStaffSession();
+      if (!session) return; // already redirected to /admin/login/
+      await initAdminNav();
+      lucide.createIcons();
+      await loadValues();
+    })();
+
+    const burgerBtn = document.getElementById('burgerBtn');
+    const mobileMenu = document.getElementById('mobileMenu');
+    burgerBtn.addEventListener('click', () => {
+      mobileMenu.classList.toggle('open');
+      burgerBtn.innerHTML = mobileMenu.classList.contains('open') ? '<i data-lucide="x"></i>' : '<i data-lucide="menu"></i>';
+      lucide.createIcons();
+    });
+  </script>
+</body>
+
+</html>

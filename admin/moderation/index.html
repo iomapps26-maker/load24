@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Moderation — LOAD24 Admin</title>
+  <meta name="robots" content="noindex, nofollow" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  <link rel="stylesheet" href="../../css/app-theme.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="../js/admin-shared.js"></script>
+  <style>
+    .app-nav-links { flex-wrap: wrap; row-gap: 6px; }
+
+    .admin-wrap { max-width: 1080px; margin: 0 auto; padding: 48px 20px 80px; }
+    .admin-wrap h1 { font-size: 26px; margin: 0 0 8px; }
+    .admin-wrap p.sub { color: var(--slate); font-size: 14.5px; margin: 0 0 24px; }
+
+    .mod-tabs { display: flex; gap: 8px; margin-bottom: 20px; border-bottom: 1px solid var(--slate-200); }
+    .mod-tab {
+      padding: 10px 18px; font-weight: 700; font-size: 14px; color: var(--slate);
+      border-bottom: 2px solid transparent; cursor: pointer; background: none; border-top: none; border-left: none; border-right: none;
+    }
+    .mod-tab.active { color: var(--brand); border-bottom-color: var(--brand); }
+
+    .mod-toolbar { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+    .mod-toolbar select {
+      font-family: inherit; font-size: 13.5px; padding: 8px 12px; border: 1.5px solid var(--slate-200);
+      border-radius: 10px; background: #fff; color: var(--ink);
+    }
+
+    .admin-error {
+      background: #fee2e2; color: #b91c1c; font-size: 13.5px; font-weight: 600;
+      padding: 14px 16px; border-radius: 12px; margin-bottom: 20px; line-height: 1.5;
+    }
+    .admin-loading, .admin-empty {
+      text-align: center; color: var(--slate); font-size: 14px; padding: 60px 20px;
+      background: var(--slate-50); border-radius: var(--radius-md);
+    }
+
+    .mod-table-wrap { overflow-x: auto; background: var(--white); border: 1px solid var(--slate-200); border-radius: var(--radius-md); box-shadow: var(--shadow-soft); }
+    table.mod-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+    table.mod-table th {
+      text-align: left; background: var(--slate-50); color: var(--ink); font-weight: 700;
+      padding: 12px 14px; border-bottom: 2px solid var(--slate-200); white-space: nowrap;
+    }
+    table.mod-table td { padding: 12px 14px; border-bottom: 1px solid var(--slate-200); color: var(--slate); vertical-align: middle; }
+    table.mod-table tr:last-child td { border-bottom: none; }
+    table.mod-table td.strong { color: var(--ink); font-weight: 600; }
+
+    .mod-row-error { color: #b91c1c; font-size: 12px; font-weight: 600; margin-top: 4px; }
+    .mod-actions { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .mod-actions select {
+      font-family: inherit; font-size: 12.5px; padding: 6px 8px; border: 1.5px solid var(--slate-200);
+      border-radius: 8px; background: #fff; color: var(--ink);
+    }
+
+    .mod-pagination { display: flex; align-items: center; justify-content: center; gap: 14px; margin-top: 18px; font-size: 13.5px; color: var(--slate); }
+  </style>
+</head>
+
+<body class="app-theme">
+  <header class="app-nav" id="siteNav">
+    <div class="wrap app-nav-inner">
+      <a href="/admin/" class="app-logo">
+        <i data-lucide="shield-check" style="width:20px;height:20px;color:#f97316;"></i>LOAD<span>24</span>
+        <span style="color:#94a3b8;font-weight:600;font-size:13px;margin-left:4px;">Admin</span>
+      </a>
+      <nav class="app-nav-links">
+        <a href="/admin/">Dashboard</a>
+        <a href="/admin/kyc/">KYC Queue</a>
+        <a href="/admin/trucks/">Truck KYC</a>
+        <a href="/admin/withdrawals/">Withdrawals</a>
+        <a href="/admin/moderation/" class="active">Moderation</a>
+        <a href="/admin/trips/">Trips</a>
+        <a href="/admin/notifications/">Notifications</a>
+        <a href="/admin/users/">Users</a>
+        <a href="/admin/risk/">Risk</a>
+        <a href="/admin/content/">Content</a>
+        <a href="/admin/master-data/">Master Data</a>
+        <a href="/admin/audit-log/">Audit Log</a>
+      </nav>
+      <div class="app-nav-actions">
+        <span id="staffEmail" style="color:#94a3b8;font-size:13px;"></span>
+        <button class="btn btn-ghost-white btn-sm" id="signOutBtn"><i data-lucide="log-out" style="width:15px;height:15px;"></i> Sign Out</button>
+        <button class="app-burger" id="burgerBtn" aria-label="Open menu"><i data-lucide="menu"></i></button>
+      </div>
+    </div>
+    <div class="app-mobile-menu" id="mobileMenu">
+      <a href="/admin/">Dashboard</a>
+      <a href="/admin/kyc/">KYC Queue</a>
+      <a href="/admin/trucks/">Truck KYC</a>
+      <a href="/admin/withdrawals/">Withdrawals</a>
+      <a href="/admin/moderation/">Moderation</a>
+      <a href="/admin/trips/">Trips</a>
+      <a href="/admin/notifications/">Notifications</a>
+      <a href="/admin/users/">Users</a>
+      <a href="/admin/risk/">Risk</a>
+      <a href="/admin/content/">Content</a>
+      <a href="/admin/master-data/">Master Data</a>
+      <a href="/admin/audit-log/">Audit Log</a>
+    </div>
+  </header>
+
+  <main class="admin-wrap">
+    <h1>Moderation</h1>
+    <p class="sub">Flag, remove, or restore loads and vehicles.</p>
+
+    <div class="mod-tabs">
+      <button class="mod-tab active" data-tab="loads">Loads</button>
+      <button class="mod-tab" data-tab="trucks">Vehicles</button>
+    </div>
+
+    <div class="mod-toolbar">
+      <select id="statusFilter">
+        <option value="">All statuses</option>
+      </select>
+    </div>
+
+    <div id="modError" class="admin-error" hidden></div>
+    <div id="modLoading" class="admin-loading">Loading…</div>
+    <div id="modEmpty" class="admin-empty" hidden>Nothing to show.</div>
+    <div id="modTableWrap" class="mod-table-wrap" hidden>
+      <table class="mod-table">
+        <thead id="modTableHead"></thead>
+        <tbody id="modTableBody"></tbody>
+      </table>
+    </div>
+    <div id="modPagination" class="mod-pagination" hidden></div>
+  </main>
+
+  <footer class="app-footer">
+    <div class="wrap">
+      <div class="foot-top">
+        <a href="/" class="app-logo"><i data-lucide="truck" style="width:20px;height:20px;color:#f97316;"></i>LOAD24.in</a>
+        <div class="badge badge-green">🟢 All India Services</div>
+      </div>
+      <p class="copyright">© 2026 LOAD24. All rights reserved.</p>
+      <div class="foot-links">
+        <a href="/delete-account/">Delete Account</a><span>|</span>
+        <a href="/PrivacyPolicy/">Privacy Policy</a><span>|</span>
+        <a href="/">Main Site</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Per-entity config: API path, table columns, status options, and the
+    // set of statuses PATCH .../loads|trucks/:id will actually accept for
+    // "Restore" — matches LOAD_STATUSES/TRUCK_STATUSES in
+    // apps/backend/src/routes/admin/moderation.js exactly, since the API
+    // has no memory of a row's pre-moderation status: the admin picks what
+    // to restore it to.
+    const ENTITIES = {
+      loads: {
+        listPath: '/api/admin/moderation/loads',
+        patchPath: (id) => `/api/admin/moderation/loads/${id}`,
+        idField: 'id',
+        allStatuses: ['active', 'matched', 'in_transit', 'completed', 'cancelled', 'expired', 'flagged', 'removed'],
+        restoreStatuses: ['active', 'matched', 'in_transit', 'completed', 'cancelled', 'expired'],
+        listKey: 'loads',
+        columns: ['Load', 'Poster', 'Material', 'Route', 'Status', 'Created', 'Actions'],
+        renderRow(item) {
+          const load = item;
+          const poster = load.poster;
+          const route = [load.loading_city, load.unloading_city].filter(Boolean).join(' → ') || '—';
+          return `
+            <td class="strong">${escapeHtml((load.load_id || load.id || '').toString().slice(0, 10))}</td>
+            <td>${escapeHtml(poster?.full_name || load.posted_by || '—')}</td>
+            <td>${escapeHtml(load.material_type || '—')}</td>
+            <td>${escapeHtml(route)}</td>
+            <td>${statusBadge(load.status)}</td>
+            <td>${formatDate(load.created_at)}</td>`;
+        }
+      },
+      trucks: {
+        listPath: '/api/admin/moderation/trucks',
+        patchPath: (id) => `/api/admin/moderation/trucks/${id}`,
+        idField: 'id',
+        allStatuses: ['active', 'inactive', 'flagged', 'removed'],
+        restoreStatuses: ['active', 'inactive'],
+        listKey: 'trucks',
+        columns: ['Registration', 'Owner', 'Type', 'Status', 'Created', 'Actions'],
+        renderRow(item) {
+          const truck = item;
+          const owner = truck.owner;
+          return `
+            <td class="strong">${escapeHtml(truck.registration_number || '—')}</td>
+            <td>${escapeHtml(owner?.full_name || '—')}</td>
+            <td>${escapeHtml(titleCase(truck.truck_type))}</td>
+            <td>${statusBadge(truck.status)}</td>
+            <td>${formatDate(truck.created_at)}</td>`;
+        }
+      }
+    };
+
+    const STATUS_BADGE = {
+      active: 'badge-green', matched: 'badge-blue', in_transit: 'badge-blue', completed: 'badge-slate',
+      cancelled: 'badge-slate', expired: 'badge-slate', inactive: 'badge-slate',
+      flagged: 'badge-orange', removed: 'badge-red'
+    };
+    function statusBadge(status) {
+      return `<span class="badge ${STATUS_BADGE[status] || 'badge-slate'}">${escapeHtml(titleCase(status))}</span>`;
+    }
+
+    let activeTab = 'loads';
+    let currentPage = 1;
+    const PAGE_SIZE = 15;
+
+    const tabButtons = document.querySelectorAll('.mod-tab');
+    const statusFilterEl = document.getElementById('statusFilter');
+    const errorEl = document.getElementById('modError');
+    const loadingEl = document.getElementById('modLoading');
+    const emptyEl = document.getElementById('modEmpty');
+    const tableWrapEl = document.getElementById('modTableWrap');
+    const tableHeadEl = document.getElementById('modTableHead');
+    const tableBodyEl = document.getElementById('modTableBody');
+    const paginationEl = document.getElementById('modPagination');
+
+    function renderStatusFilterOptions() {
+      const entity = ENTITIES[activeTab];
+      statusFilterEl.innerHTML = '<option value="">All statuses</option>' +
+        entity.allStatuses.map((s) => `<option value="${s}">${titleCase(s)}</option>`).join('');
+    }
+
+    function renderTableHead() {
+      const entity = ENTITIES[activeTab];
+      tableHeadEl.innerHTML = `<tr>${entity.columns.map((c) => `<th>${c}</th>`).join('')}</tr>`;
+    }
+
+    function restoreSelectHtml(entity, rowId) {
+      return `<select class="restore-select" data-row-id="${escapeHtml(rowId)}">` +
+        entity.restoreStatuses.map((s) => `<option value="${s}">${titleCase(s)}</option>`).join('') +
+        `</select>`;
+    }
+
+    function actionsHtml(entity, item) {
+      const id = item[entity.idField];
+      const status = item.status;
+      const buttons = [];
+      if (status !== 'flagged') {
+        buttons.push(`<button class="btn btn-outline-slate btn-sm" style="color:#c2410c;border-color:#fed7aa;" data-action="flag" data-id="${escapeHtml(id)}">Flag</button>`);
+      }
+      if (status !== 'removed') {
+        buttons.push(`<button class="btn btn-outline-slate btn-sm" style="color:#dc2626;border-color:#fecaca;" data-action="remove" data-id="${escapeHtml(id)}">Remove</button>`);
+      }
+      if (status === 'flagged' || status === 'removed') {
+        buttons.push(restoreSelectHtml(entity, id));
+        buttons.push(`<button class="btn btn-brand btn-sm" data-action="restore" data-id="${escapeHtml(id)}">Restore</button>`);
+      }
+      return `<div class="mod-actions">${buttons.join('')}<div class="mod-row-error" data-error-for="${escapeHtml(id)}" hidden></div></div>`;
+    }
+
+    async function loadTable() {
+      const entity = ENTITIES[activeTab];
+      loadingEl.hidden = false;
+      errorEl.hidden = true;
+      emptyEl.hidden = true;
+      tableWrapEl.hidden = true;
+      paginationEl.hidden = true;
+
+      try {
+        const params = new URLSearchParams({ page: String(currentPage), limit: String(PAGE_SIZE) });
+        if (statusFilterEl.value) params.set('status', statusFilterEl.value);
+
+        const res = await adminApiFetch(`${entity.listPath}?${params.toString()}`);
+        if (res.status === 403) throw new Error(NO_STAFF_ROLE_MESSAGE);
+        const body = await res.json();
+        if (!res.ok) throw new Error(body.error || `Request failed (${res.status})`);
+
+        loadingEl.hidden = true;
+        const items = body[entity.listKey] || [];
+        if (!items.length) {
+          emptyEl.hidden = false;
+          return;
+        }
+
+        renderTableHead();
+        tableBodyEl.innerHTML = items
+          .map((item) => `<tr data-row-id="${escapeHtml(item[entity.idField])}">${entity.renderRow(item)}<td>${actionsHtml(entity, item)}</td></tr>`)
+          .join('');
+        tableWrapEl.hidden = false;
+        lucide.createIcons();
+
+        const totalPages = Math.max(1, Math.ceil((body.total || 0) / PAGE_SIZE));
+        paginationEl.hidden = false;
+        paginationEl.innerHTML = `
+          <button class="btn btn-outline-slate btn-sm" id="prevPageBtn" ${currentPage <= 1 ? 'disabled' : ''}>Previous</button>
+          <span>Page ${currentPage} of ${totalPages} (${body.total || 0} total)</span>
+          <button class="btn btn-outline-slate btn-sm" id="nextPageBtn" ${currentPage >= totalPages ? 'disabled' : ''}>Next</button>`;
+        document.getElementById('prevPageBtn').addEventListener('click', () => { currentPage--; loadTable(); });
+        document.getElementById('nextPageBtn').addEventListener('click', () => { currentPage++; loadTable(); });
+      } catch (err) {
+        loadingEl.hidden = true;
+        errorEl.textContent = err.message;
+        errorEl.hidden = false;
+      }
+    }
+
+    function switchTab(tab) {
+      activeTab = tab;
+      currentPage = 1;
+      tabButtons.forEach((b) => b.classList.toggle('active', b.dataset.tab === tab));
+      renderStatusFilterOptions();
+      loadTable();
+    }
+
+    tabButtons.forEach((btn) => btn.addEventListener('click', () => switchTab(btn.dataset.tab)));
+    statusFilterEl.addEventListener('change', () => { currentPage = 1; loadTable(); });
+
+    tableBodyEl.addEventListener('click', async (e) => {
+      const btn = e.target.closest('button[data-action]');
+      if (!btn) return;
+      const entity = ENTITIES[activeTab];
+      const id = btn.dataset.id;
+      const action = btn.dataset.action;
+      const rowEl = btn.closest('tr');
+      const errorBox = rowEl.querySelector(`[data-error-for="${CSS.escape(id)}"]`);
+
+      let nextStatus;
+      if (action === 'flag') nextStatus = 'flagged';
+      else if (action === 'remove') nextStatus = 'removed';
+      else if (action === 'restore') nextStatus = rowEl.querySelector('.restore-select').value;
+
+      rowEl.querySelectorAll('button').forEach((b) => { b.disabled = true; });
+      try {
+        const res = await adminApiFetch(entity.patchPath(id), {
+          method: 'PATCH',
+          body: JSON.stringify({ status: nextStatus })
+        });
+        const body = await res.json();
+        if (!res.ok) throw new Error(body.error || 'Update failed');
+        loadTable(); // simplest correct re-render: re-fetch this page from the server
+      } catch (err) {
+        rowEl.querySelectorAll('button').forEach((b) => { b.disabled = false; });
+        if (errorBox) {
+          errorBox.textContent = err.message;
+          errorBox.hidden = false;
+        }
+      }
+    });
+
+    (async function init() {
+      const session = await requireStaffSession();
+      if (!session) return; // already redirected to /admin/login/
+      await initAdminNav();
+      lucide.createIcons();
+      renderStatusFilterOptions();
+      await loadTable();
+    })();
+
+    const burgerBtn = document.getElementById('burgerBtn');
+    const mobileMenu = document.getElementById('mobileMenu');
+    burgerBtn.addEventListener('click', () => {
+      mobileMenu.classList.toggle('open');
+      burgerBtn.innerHTML = mobileMenu.classList.contains('open') ? '<i data-lucide="x"></i>' : '<i data-lucide="menu"></i>';
+      lucide.createIcons();
+    });
+  </script>
+</body>
+
+</html>

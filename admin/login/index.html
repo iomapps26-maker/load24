@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Staff Sign In — LOAD24 Admin</title>
+  <meta name="robots" content="noindex, nofollow" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  <link rel="stylesheet" href="../../css/app-theme.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="../js/admin-shared.js"></script>
+  <style>
+    body.admin-login-body {
+      min-height: 100vh;
+      background: var(--navy);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .admin-login-card {
+      width: 100%;
+      max-width: 400px;
+      background: var(--white);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-lift);
+      padding: 36px 32px;
+    }
+
+    .admin-login-logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: 'Poppins', sans-serif;
+      font-weight: 800;
+      font-size: 20px;
+      color: var(--ink);
+      margin-bottom: 18px;
+    }
+
+    .admin-login-logo span { color: var(--brand); }
+
+    .admin-login-card h1 { font-size: 21px; margin: 0 0 6px; }
+    .admin-login-card p.sub { color: var(--slate); font-size: 13.5px; margin: 0 0 24px; }
+
+    .admin-error {
+      background: #fee2e2;
+      color: #b91c1c;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 10px 14px;
+      border-radius: 10px;
+      margin-bottom: 16px;
+    }
+
+    .admin-login-footnote { text-align: center; margin-top: 18px; font-size: 12px; color: var(--slate); }
+    .admin-login-footnote a { color: var(--brand); font-weight: 600; }
+  </style>
+</head>
+
+<body class="app-theme admin-login-body">
+  <div class="admin-login-card">
+    <div class="admin-login-logo"><i data-lucide="truck" style="width:22px;height:22px;color:#f97316;"></i>LOAD<span>24</span></div>
+    <div class="eyebrow-pill" style="margin-bottom:14px;"><i data-lucide="shield-check" style="width:13px;height:13px;"></i> Staff Portal</div>
+    <h1>Admin Sign In</h1>
+    <p class="sub">Sign in with your LOAD24 staff account to review KYC submissions and withdrawal requests.</p>
+
+    <div id="loginError" class="admin-error" hidden></div>
+
+    <form id="loginForm">
+      <div class="field">
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email" autocomplete="username" required />
+      </div>
+      <div class="field">
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" autocomplete="current-password" required />
+      </div>
+      <button type="submit" class="btn btn-brand btn-block" id="loginBtn">
+        <i data-lucide="log-in" style="width:16px;height:16px;"></i> Sign In
+      </button>
+    </form>
+
+    <div class="admin-login-footnote">Not staff? <a href="/">Back to LOAD24.in</a></div>
+  </div>
+
+  <script>
+    lucide.createIcons();
+
+    // Already signed in (e.g. came back to this URL directly) — skip the form.
+    (async function redirectIfSignedIn() {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (session) window.location.href = '/admin/';
+    })();
+
+    const form = document.getElementById('loginForm');
+    const errorBox = document.getElementById('loginError');
+    const loginBtn = document.getElementById('loginBtn');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      errorBox.hidden = true;
+      loginBtn.disabled = true;
+      loginBtn.textContent = 'Signing in…';
+
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+
+      const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+
+      if (error) {
+        errorBox.textContent = error.message || 'Sign in failed';
+        errorBox.hidden = false;
+        loginBtn.disabled = false;
+        loginBtn.innerHTML = '<i data-lucide="log-in" style="width:16px;height:16px;"></i> Sign In';
+        lucide.createIcons();
+        return;
+      }
+
+      window.location.href = '/admin/';
+    });
+  </script>
+</body>
+
+</html>
