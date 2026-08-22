@@ -17,7 +17,18 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <script src="../js/admin-shared.js"></script>
   <style>
-    .app-nav-links { flex-wrap: wrap; row-gap: 6px; }
+    /* 12 nav links don't fit a single row below ~1600px; scroll instead of
+       wrapping, since the fixed-height bar clips a wrapped second row. */
+    .app-nav-links { flex: 1 1 auto; min-width: 0; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: thin; gap: 4px; }
+    .app-nav-links::-webkit-scrollbar { height: 4px; }
+    .app-nav-links::-webkit-scrollbar-thumb { background: rgba(255,255,255,.25); border-radius: 4px; }
+    .app-nav-links a { flex: 0 0 auto; }
+    .app-logo, .app-nav-actions { flex: 0 0 auto; }
+    @media (max-width: 480px) {
+      .app-logo span:last-child { display: none; }
+      #staffEmail { display: none; }
+      #signOutBtn { padding: 8px 10px; }
+    }
 
     .admin-wrap { max-width: 900px; margin: 0 auto; padding: 48px 20px 80px; }
     .admin-wrap h1 { font-size: 26px; margin: 0 0 8px; }
