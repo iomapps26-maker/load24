@@ -30,7 +30,7 @@
       #signOutBtn { padding: 8px 10px; }
     }
 
-    .admin-wrap { max-width: 680px; margin: 0 auto; padding: 48px 20px 80px; }
+    .admin-wrap { max-width: 760px; margin: 0 auto; padding: 48px 20px 80px; }
     .admin-wrap h1 { font-size: 26px; margin: 0 0 8px; }
     .admin-wrap p.sub { color: var(--slate); font-size: 14.5px; margin: 0 0 24px; }
 
@@ -52,6 +52,8 @@
       box-shadow: var(--shadow-soft); padding: 24px;
     }
     .bc-card .field { margin-bottom: 22px; }
+    .bc-divider { border: none; border-top: 1px solid var(--slate-200); margin: 26px 0; }
+    .bc-h2 { font-size: 16px; margin: 0 0 8px; }
 
     /* ₹ / % affixes sit inside the app-theme .field input box. */
     .bc-input-wrap { position: relative; }
@@ -66,10 +68,56 @@
     }
     .bc-affix.prefix { left: 14px; }
     .bc-affix.suffix { right: 14px; }
-    .bc-help { color: var(--slate); font-size: 12.5px; margin: 8px 0 0; line-height: 1.5; }
+    .bc-help { color: var(--slate); font-size: 12.5px; margin: 8px 0 0; line-height: 1.55; }
+
+    /* Slab table — editable rows, one grid track per column. */
+    .bc-slab-head, .bc-slab-row { display: grid; grid-template-columns: 1fr 1fr 44px; gap: 10px; align-items: center; }
+    .bc-slab-head { margin: 16px 0 6px; font-size: 11.5px; font-weight: 700; letter-spacing: .02em; text-transform: uppercase; color: var(--slate); }
+    .bc-slab-row { margin-bottom: 8px; }
+    .bc-slab-row input {
+      width: 100%; font-family: inherit; font-size: 14px; padding: 11px 12px;
+      border: 1.5px solid var(--slate-200); border-radius: 10px; background: #fff; color: var(--ink);
+      outline: none; transition: border-color .15s;
+    }
+    .bc-slab-row input:focus { border-color: var(--brand); }
+    .bc-slab-row input.bc-invalid { border-color: #dc2626; background: #fef2f2; }
+    .bc-slab-row input::-webkit-outer-spin-button,
+    .bc-slab-row input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    .bc-slab-row input[type=number] { -moz-appearance: textfield; appearance: textfield; }
+    .bc-slab-del {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 40px; height: 40px; border-radius: 9px; border: 1px solid var(--slate-200);
+      background: #fff; color: #dc2626; cursor: pointer; transition: background .15s, border-color .15s;
+    }
+    .bc-slab-del:hover { background: #fef2f2; border-color: #fecaca; }
+    .bc-slab-none { color: var(--slate); font-size: 13px; padding: 6px 0 2px; }
+    #bcCharge.bc-invalid, #bcAbovePct.bc-invalid { border-color: #dc2626; background: #fef2f2; }
+
+    .bc-warn {
+      display: flex; align-items: center; gap: 9px; margin-top: 16px;
+      background: #fef3c7; color: #92400e; font-size: 13px; font-weight: 600;
+      padding: 12px 14px; border-radius: 10px; line-height: 1.45;
+    }
+    .bc-warn i { flex: 0 0 auto; }
+    .bc-errlist {
+      margin: 16px 0 0; padding: 12px 16px 12px 32px; list-style: disc;
+      background: #fee2e2; color: #b91c1c; font-size: 13px; font-weight: 600;
+      border-radius: 10px; line-height: 1.7;
+    }
+
+    .bc-preview { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+    .bc-preview .field { margin: 0; width: 190px; }
+    .bc-preview-out { font-size: 14px; color: var(--slate); line-height: 1.5; }
+    .bc-preview-hold { color: var(--brand); font-size: 16px; }
 
     .bc-actions { display: flex; gap: 10px; margin-top: 4px; }
     .bc-actions .btn[disabled] { opacity: .5; cursor: not-allowed; box-shadow: none; }
+    #bcAddSlab[disabled] { opacity: .5; cursor: not-allowed; }
+
+    @media (max-width: 560px) {
+      .bc-slab-row input { padding: 10px 8px; font-size: 13px; }
+      .bc-slab-head { font-size: 10.5px; }
+    }
   </style>
 </head>
 
@@ -140,13 +188,64 @@
         <p class="bc-help">Shown to users as a payment-breakup line on the bid screen — e.g. “Load24 charge (4.0%)”.</p>
       </div>
 
-      <div class="field">
-        <label for="bcDeposit">Security deposit before bidding (₹)</label>
-        <div class="bc-input-wrap has-prefix">
-          <span class="bc-affix prefix">₹</span>
-          <input type="number" id="bcDeposit" step="100" min="0" inputmode="numeric" />
+      <hr class="bc-divider" />
+
+      <div class="bc-section">
+        <h2 class="bc-h2">Bid security deposit</h2>
+        <p class="bc-help">
+          Each slab means “for a bid amount up to ₹<em>X</em>, hold ₹<em>Y</em> in the bidder’s wallet.”
+          A bid above the largest cap holds the top slab’s amount plus <em>% above top slab</em> of the excess,
+          rounded to the nearest rupee. Current production table: 10,000&nbsp;→&nbsp;750, 20,000&nbsp;→&nbsp;1,000,
+          30,000&nbsp;→&nbsp;1,100, +1% above — so a ₹45,000 bid holds ₹1,250.
+        </p>
+
+        <div class="bc-slab-head">
+          <span>Bid amount up to (₹)</span>
+          <span>Hold in wallet (₹)</span>
+          <span></span>
         </div>
-        <p class="bc-help">Minimum available wallet balance a user must hold — a bid is rejected before it's placed if their balance is lower.</p>
+        <div id="bcSlabRows"></div>
+        <p id="bcSlabNone" class="bc-slab-none" hidden>No slabs — the deposit is disabled.</p>
+
+        <button type="button" class="btn btn-outline-slate btn-sm" id="bcAddSlab" style="margin-top:6px;">
+          <i data-lucide="plus" style="width:14px;height:14px;"></i> Add slab
+        </button>
+
+        <div class="field" style="margin-top:20px;max-width:220px;">
+          <label for="bcAbovePct">% above top slab</label>
+          <div class="bc-input-wrap has-suffix">
+            <input type="number" id="bcAbovePct" step="0.5" min="0" max="100" inputmode="decimal" />
+            <span class="bc-affix suffix">%</span>
+          </div>
+        </div>
+
+        <div id="bcDepositOff" class="bc-warn" hidden>
+          <i data-lucide="alert-triangle" style="width:16px;height:16px;"></i>
+          <span>Security deposit is turned <strong>OFF</strong> — bidders can bid with an empty wallet.</span>
+        </div>
+
+        <ul id="bcSlabErrors" class="bc-errlist" hidden></ul>
+      </div>
+
+      <hr class="bc-divider" />
+
+      <div class="bc-section">
+        <h2 class="bc-h2">Preview</h2>
+        <p class="bc-help" style="margin-top:0;margin-bottom:12px;">Type a sample bid to see the hold the app would place, using the live table above.</p>
+        <div class="bc-preview">
+          <div class="field">
+            <label for="bcPreviewBid">Sample bid amount</label>
+            <div class="bc-input-wrap has-prefix">
+              <span class="bc-affix prefix">₹</span>
+              <input type="number" id="bcPreviewBid" step="1000" min="0" inputmode="numeric" placeholder="45000" />
+            </div>
+          </div>
+          <div class="bc-preview-out">
+            A bid of <strong id="bcPreviewBidOut">—</strong> holds
+            <strong id="bcPreviewHold" class="bc-preview-hold">—</strong>
+          </div>
+        </div>
+        <p class="bc-help" id="bcPreviewNote"></p>
       </div>
 
       <div id="bcFormError" class="admin-error" hidden></div>
@@ -173,67 +272,270 @@
 
   <script>
     // Last settings object the server confirmed — the baseline the form is
-    // diffed against so a PATCH only carries the fields that actually changed.
+    // diffed against so a PATCH only carries the keys that actually changed.
+    // Shape: { load24_charge_percent, security_deposit: { slabs: [{up_to,amount}], above_slab_percent } }
     let current = null;
     let saving = false;
+
+    const MAX_SLABS = 10;
 
     const bcError = document.getElementById('bcError');
     const bcSuccess = document.getElementById('bcSuccess');
     const bcLoading = document.getElementById('bcLoading');
     const bcCard = document.getElementById('bcCard');
     const bcCharge = document.getElementById('bcCharge');
-    const bcDeposit = document.getElementById('bcDeposit');
+    const bcAbovePct = document.getElementById('bcAbovePct');
+    const bcSlabRows = document.getElementById('bcSlabRows');
+    const bcSlabNone = document.getElementById('bcSlabNone');
+    const bcAddSlab = document.getElementById('bcAddSlab');
+    const bcDepositOff = document.getElementById('bcDepositOff');
+    const bcSlabErrors = document.getElementById('bcSlabErrors');
+    const bcPreviewBid = document.getElementById('bcPreviewBid');
+    const bcPreviewBidOut = document.getElementById('bcPreviewBidOut');
+    const bcPreviewHold = document.getElementById('bcPreviewHold');
+    const bcPreviewNote = document.getElementById('bcPreviewNote');
     const bcFormError = document.getElementById('bcFormError');
     const bcSaveBtn = document.getElementById('bcSaveBtn');
 
-    // Both inputs as numbers. NaN when the field is blank or non-numeric —
-    // the validity and dirty checks both treat that as "no usable value".
-    function formValues() {
+    // Blank/whitespace -> NaN (Number('') is 0, which would slip past a 0–100
+    // range check), otherwise a real number.
+    const toNum = (v) => { const t = String(v ?? '').trim(); return t === '' ? NaN : Number(t); };
+    const fmtInr = (n) => `₹${Number(n).toLocaleString('en-IN')}`;
+
+    // ---- The exact server-side evaluator. Any preview MUST stay in sync with it.
+    function computeBidSecurityHold(bidAmount, { slabs = [], above_slab_percent = 0 } = {}) {
+      const amount = Number(bidAmount);
+      if (!Number.isFinite(amount) || amount <= 0) return 0;
+      const sorted = [...slabs]
+        .map(s => ({ up_to: Number(s.up_to), amount: Number(s.amount) }))
+        .filter(s => s.up_to > 0 && s.amount >= 0)
+        .sort((a, b) => a.up_to - b.up_to);
+      if (!sorted.length) return 0;
+      for (const s of sorted) if (amount <= s.up_to) return Math.round(s.amount);
+      const top = sorted[sorted.length - 1];
+      const pct = Number(above_slab_percent) || 0;
+      return Math.round(top.amount + ((amount - top.up_to) * pct) / 100);
+    }
+
+    // ---- Slab rows live in the DOM; these read from / write to that. ----------
+
+    function appendSlabRow(upTo = '', amount = '') {
+      const row = document.createElement('div');
+      row.className = 'bc-slab-row';
+      row.innerHTML =
+        `<input type="number" class="bc-slab-upto" min="1" step="1000" inputmode="numeric" placeholder="10000" value="${escapeHtml(String(upTo))}" aria-label="Bid amount up to" />` +
+        `<input type="number" class="bc-slab-amount" min="0" step="50" inputmode="numeric" placeholder="750" value="${escapeHtml(String(amount))}" aria-label="Hold in wallet" />` +
+        `<button type="button" class="bc-slab-del" aria-label="Remove slab" title="Remove slab"><i data-lucide="trash-2" style="width:15px;height:15px;"></i></button>`;
+      bcSlabRows.appendChild(row);
+    }
+
+    function renderSlabs(list) {
+      bcSlabRows.innerHTML = '';
+      list.forEach((s) => appendSlabRow(s.up_to, s.amount));
+      lucide.createIcons();
+    }
+
+    // Current rows in DOM order, each with its two <input> elements and both a
+    // raw string and a parsed number.
+    function readSlabRows() {
+      return [...bcSlabRows.querySelectorAll('.bc-slab-row')].map((row) => {
+        const upToEl = row.querySelector('.bc-slab-upto');
+        const amountEl = row.querySelector('.bc-slab-amount');
+        return {
+          upToEl, amountEl,
+          upToRaw: upToEl.value, amountRaw: amountEl.value,
+          up_to: toNum(upToEl.value),
+          amount: toNum(amountEl.value),
+        };
+      });
+    }
+
+    // The whole form as a settings object (numbers may be NaN — validation catches that).
+    function formSettings() {
       return {
-        load24_charge_percent: parseFloat(bcCharge.value),
-        security_deposit_amount: parseFloat(bcDeposit.value),
+        load24_charge_percent: toNum(bcCharge.value),
+        security_deposit: {
+          slabs: readSlabRows().map((r) => ({ up_to: r.up_to, amount: r.amount })),
+          above_slab_percent: toNum(bcAbovePct.value),
+        },
       };
     }
 
-    // Mirrors the backend's validation so bad input never leaves the page.
-    function fieldErrors(v) {
-      const errors = [];
-      if (!Number.isFinite(v.load24_charge_percent) || v.load24_charge_percent < 0 || v.load24_charge_percent > 100) {
-        errors.push('Load24 charge must be a number between 0 and 100.');
+    // Canonical string for a settings object: slabs sorted by cap, non-finite
+    // numbers tagged so they never compare equal to a real value. Used for the
+    // dirty check and the per-key PATCH diff.
+    function canon(s) {
+      const tag = (x) => (Number.isFinite(x) ? x : '∅');
+      const slabs = s.security_deposit.slabs
+        .map((sl) => ({ up_to: tag(Number(sl.up_to)), amount: tag(Number(sl.amount)) }))
+        .sort((a, b) => {
+          const an = a.up_to === '∅', bn = b.up_to === '∅';
+          if (an && bn) return 0;
+          if (an) return 1;
+          if (bn) return -1;
+          return a.up_to - b.up_to;
+        });
+      return JSON.stringify({
+        c: tag(Number(s.load24_charge_percent)),
+        p: tag(Number(s.security_deposit.above_slab_percent)),
+        s: slabs,
+      });
+    }
+    const canonDeposit = (sd) => canon({ load24_charge_percent: 0, security_deposit: sd });
+
+    // ---- Validation — mirrors the server rules for inline errors. -------------
+    function validate() {
+      const messages = [];
+      const invalid = new Set();
+
+      const charge = toNum(bcCharge.value);
+      if (!Number.isFinite(charge) || charge < 0 || charge > 100) {
+        messages.push('Load24 charge must be a number between 0 and 100.');
+        invalid.add(bcCharge);
       }
-      if (!Number.isFinite(v.security_deposit_amount) || v.security_deposit_amount < 0) {
-        errors.push('Security deposit must be 0 or more.');
+
+      const pct = toNum(bcAbovePct.value);
+      if (!Number.isFinite(pct) || pct < 0 || pct > 100) {
+        messages.push('“% above top slab” must be a number between 0 and 100.');
+        invalid.add(bcAbovePct);
       }
-      return errors;
+
+      const rows = readSlabRows();
+      if (rows.length > MAX_SLABS) messages.push(`At most ${MAX_SLABS} slabs are allowed.`);
+
+      const seen = new Map(); // up_to value -> first row index that used it
+      rows.forEach((r, i) => {
+        const n = i + 1;
+        if (!Number.isFinite(r.up_to) || r.up_to <= 0) {
+          messages.push(`Slab ${n}: “up to” must be a number greater than 0.`);
+          invalid.add(r.upToEl);
+        }
+        if (!Number.isFinite(r.amount) || r.amount < 0) {
+          messages.push(`Slab ${n}: hold amount must be a number of 0 or more.`);
+          invalid.add(r.amountEl);
+        }
+        if (Number.isFinite(r.up_to) && r.up_to > 0) {
+          if (seen.has(r.up_to)) {
+            messages.push(`Slabs ${seen.get(r.up_to) + 1} and ${n} both cap at ${fmtInr(r.up_to)} — each cap must be different.`);
+            invalid.add(r.upToEl);
+            invalid.add(rows[seen.get(r.up_to)].upToEl);
+          } else {
+            seen.set(r.up_to, i);
+          }
+        }
+      });
+
+      return { messages: [...new Set(messages)], invalid };
     }
 
-    // Only the fields whose value differs from what's saved on the server.
-    function changedFields(v) {
-      const body = {};
-      if (!current) return body;
-      if (v.load24_charge_percent !== current.load24_charge_percent) {
-        body.load24_charge_percent = v.load24_charge_percent;
+    // ---- Live preview -------------------------------------------------------
+    function updatePreview() {
+      const sd = {
+        slabs: readSlabRows().map((r) => ({ up_to: r.up_to, amount: r.amount })),
+        above_slab_percent: toNum(bcAbovePct.value),
+      };
+      const bid = toNum(bcPreviewBid.value);
+      if (!Number.isFinite(bid) || bid <= 0) {
+        bcPreviewBidOut.textContent = '—';
+        bcPreviewHold.textContent = '—';
+        bcPreviewNote.textContent = '';
+        return;
       }
-      if (v.security_deposit_amount !== current.security_deposit_amount) {
-        body.security_deposit_amount = v.security_deposit_amount;
+      const hold = computeBidSecurityHold(bid, sd);
+      bcPreviewBidOut.textContent = fmtInr(bid);
+      bcPreviewHold.textContent = fmtInr(hold);
+
+      const sorted = sd.slabs
+        .map((s) => ({ up_to: Number(s.up_to), amount: Number(s.amount) }))
+        .filter((s) => s.up_to > 0 && s.amount >= 0)
+        .sort((a, b) => a.up_to - b.up_to);
+      if (!sorted.length) {
+        bcPreviewNote.textContent = 'No valid slabs — the deposit is off, so nothing is held.';
+        return;
       }
-      return body;
+      const match = sorted.find((s) => bid <= s.up_to);
+      if (match) {
+        bcPreviewNote.textContent = `Within the ${fmtInr(match.up_to)} slab → a flat ${fmtInr(match.amount)} hold.`;
+      } else {
+        const top = sorted[sorted.length - 1];
+        const pct = Number(sd.above_slab_percent) || 0;
+        bcPreviewNote.textContent =
+          `Above the top slab: ${fmtInr(top.amount)} + ${pct}% of (${fmtInr(bid)} − ${fmtInr(top.up_to)}).`;
+      }
     }
 
-    function syncSaveButton() {
-      const v = formValues();
-      const dirty = Object.keys(changedFields(v)).length > 0;
-      bcSaveBtn.disabled = saving || !dirty || fieldErrors(v).length > 0;
+    // ---- Recompute everything that depends on the form's current state. ------
+    function refreshDeps() {
+      if (!current) return;
+      const { messages, invalid } = validate();
+
+      bcCard.querySelectorAll('.bc-invalid').forEach((el) => el.classList.remove('bc-invalid'));
+      invalid.forEach((el) => el.classList.add('bc-invalid'));
+
+      if (messages.length) {
+        bcSlabErrors.innerHTML = messages.map((m) => `<li>${escapeHtml(m)}</li>`).join('');
+        bcSlabErrors.hidden = false;
+      } else {
+        bcSlabErrors.hidden = true;
+      }
+
+      const rowCount = bcSlabRows.querySelectorAll('.bc-slab-row').length;
+      bcDepositOff.hidden = rowCount !== 0;
+      bcSlabNone.hidden = rowCount !== 0;
+      bcAddSlab.disabled = rowCount >= MAX_SLABS;
+
+      updatePreview();
+
+      const dirty = canon(formSettings()) !== canon(current);
+      bcSaveBtn.disabled = saving || !dirty || messages.length > 0;
+    }
+
+    function clearNotices() {
+      bcSuccess.hidden = true;
+      bcFormError.hidden = true;
     }
 
     function fillForm(settings) {
+      const raw = settings && typeof settings.security_deposit === 'object' && settings.security_deposit
+        ? settings.security_deposit
+        : { slabs: [], above_slab_percent: 0 };
+      const slabs = (Array.isArray(raw.slabs) ? raw.slabs : [])
+        .map((s) => ({ up_to: Number(s.up_to), amount: Number(s.amount) }))
+        .sort((a, b) => a.up_to - b.up_to);
+
       current = {
         load24_charge_percent: Number(settings.load24_charge_percent),
-        security_deposit_amount: Number(settings.security_deposit_amount),
+        security_deposit: {
+          slabs,
+          above_slab_percent: Number(raw.above_slab_percent) || 0,
+        },
       };
+
       bcCharge.value = current.load24_charge_percent;
-      bcDeposit.value = current.security_deposit_amount;
-      syncSaveButton();
+      bcAbovePct.value = current.security_deposit.above_slab_percent;
+      renderSlabs(current.security_deposit.slabs);
+      if (!bcPreviewBid.value) bcPreviewBid.value = '45000';
+      refreshDeps();
+    }
+
+    // Only the keys whose value differs from what the server last confirmed.
+    function patchBody() {
+      const body = {};
+      const form = formSettings();
+      if (form.load24_charge_percent !== current.load24_charge_percent) {
+        body.load24_charge_percent = form.load24_charge_percent;
+      }
+      // Sorted ascending, exactly the shape the server wants back.
+      const sd = {
+        slabs: form.security_deposit.slabs
+          .map((s) => ({ up_to: s.up_to, amount: s.amount }))
+          .sort((a, b) => a.up_to - b.up_to),
+        above_slab_percent: form.security_deposit.above_slab_percent,
+      };
+      if (canonDeposit(sd) !== canonDeposit(current.security_deposit)) {
+        body.security_deposit = sd;
+      }
+      return body;
     }
 
     async function loadSettings() {
@@ -243,7 +545,7 @@
       try {
         const res = await adminApiFetch('/api/admin/platform-settings/bidding');
         if (res.status === 403) throw new Error(NO_STAFF_ROLE_MESSAGE);
-        const body = await res.json();
+        const body = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(body.error || `Request failed (${res.status})`);
 
         fillForm(body);
@@ -256,30 +558,64 @@
       }
     }
 
-    [bcCharge, bcDeposit].forEach((el) => {
-      el.addEventListener('input', () => {
-        bcSuccess.hidden = true;
-        bcFormError.hidden = true;
-        syncSaveButton();
+    // ---- Wiring -----------------------------------------------------------
+    [bcCharge, bcAbovePct].forEach((el) => {
+      el.addEventListener('input', () => { clearNotices(); refreshDeps(); });
+    });
+    bcPreviewBid.addEventListener('input', updatePreview);
+
+    // Typing in a slab cell: revalidate + preview, but don't re-render (that
+    // would drop the caret). Leaving an "up to" cell: re-sort rows by cap.
+    bcSlabRows.addEventListener('input', () => { clearNotices(); refreshDeps(); });
+    bcSlabRows.addEventListener('change', (e) => {
+      if (!e.target.classList.contains('bc-slab-upto')) return;
+      const rows = readSlabRows().map((r, i) => ({ up_to: r.upToRaw, amount: r.amountRaw, n: r.up_to, i }));
+      const sorted = [...rows].sort((a, b) => {
+        const an = Number.isFinite(a.n), bn = Number.isFinite(b.n);
+        if (!an && !bn) return a.i - b.i;
+        if (!an) return 1;
+        if (!bn) return -1;
+        return a.n - b.n || a.i - b.i;
       });
+      // Only rebuild the rows if the sort actually moved something.
+      if (sorted.some((r, idx) => r.i !== idx)) {
+        renderSlabs(sorted);
+        refreshDeps();
+      }
+    });
+    bcSlabRows.addEventListener('click', (e) => {
+      const del = e.target.closest('.bc-slab-del');
+      if (!del) return;
+      del.closest('.bc-slab-row').remove();
+      clearNotices();
+      refreshDeps();
+    });
+
+    bcAddSlab.addEventListener('click', () => {
+      if (bcSlabRows.querySelectorAll('.bc-slab-row').length >= MAX_SLABS) return;
+      appendSlabRow('', '');
+      lucide.createIcons();
+      const rows = bcSlabRows.querySelectorAll('.bc-slab-row');
+      rows[rows.length - 1].querySelector('.bc-slab-upto').focus();
+      clearNotices();
+      refreshDeps();
     });
 
     bcSaveBtn.addEventListener('click', async () => {
-      bcFormError.hidden = true;
-      bcSuccess.hidden = true;
+      clearNotices();
 
-      const v = formValues();
-      const errors = fieldErrors(v);
-      if (errors.length) {
-        bcFormError.textContent = errors.join(' ');
+      const { messages } = validate();
+      if (messages.length) {
+        bcFormError.textContent = messages.join(' ');
         bcFormError.hidden = false;
+        refreshDeps();
         return;
       }
-      const body = changedFields(v);
+      const body = patchBody();
       if (!Object.keys(body).length) return;
 
       saving = true;
-      syncSaveButton();
+      refreshDeps();
       bcSaveBtn.textContent = 'Saving…';
       try {
         const res = await adminApiFetch('/api/admin/platform-settings/bidding', {
@@ -287,20 +623,20 @@
           body: JSON.stringify(body),
         });
         if (res.status === 403) throw new Error(NO_STAFF_ROLE_MESSAGE);
-        const resBody = await res.json();
-        if (!res.ok) throw new Error(resBody.error || 'Could not save these settings');
+        const resBody = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(resBody.error || resBody.message || `Could not save these settings (${res.status})`);
 
         saving = false;
         bcSaveBtn.textContent = 'Save';
+        fillForm(resBody); // server returns the full updated object, slabs sorted
         bcSuccess.textContent = 'Bidding charges updated.';
         bcSuccess.hidden = false;
-        await loadSettings();
       } catch (err) {
         saving = false;
         bcSaveBtn.textContent = 'Save';
         bcFormError.textContent = err.message;
         bcFormError.hidden = false;
-        syncSaveButton();
+        refreshDeps();
       }
     });
 
