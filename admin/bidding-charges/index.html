@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bidding Charges — LOAD24 Admin</title>
+  <meta name="robots" content="noindex, nofollow" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  <link rel="stylesheet" href="../../css/app-theme.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="../js/admin-shared.js"></script>
+  <style>
+    /* 12 nav links don't fit a single row below ~1600px; scroll instead of
+       wrapping, since the fixed-height bar clips a wrapped second row. */
+    .app-nav-links { flex: 1 1 auto; min-width: 0; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: thin; gap: 4px; }
+    .app-nav-links::-webkit-scrollbar { height: 4px; }
+    .app-nav-links::-webkit-scrollbar-thumb { background: rgba(255,255,255,.25); border-radius: 4px; }
+    .app-nav-links a { flex: 0 0 auto; }
+    .app-logo, .app-nav-actions { flex: 0 0 auto; }
+    @media (max-width: 480px) {
+      .app-logo span:last-child { display: none; }
+      #staffEmail { display: none; }
+      #signOutBtn { padding: 8px 10px; }
+    }
+
+    .admin-wrap { max-width: 680px; margin: 0 auto; padding: 48px 20px 80px; }
+    .admin-wrap h1 { font-size: 26px; margin: 0 0 8px; }
+    .admin-wrap p.sub { color: var(--slate); font-size: 14.5px; margin: 0 0 24px; }
+
+    .admin-error {
+      background: #fee2e2; color: #b91c1c; font-size: 13.5px; font-weight: 600;
+      padding: 14px 16px; border-radius: 12px; margin-bottom: 20px; line-height: 1.5;
+    }
+    .admin-success {
+      background: #dcfce7; color: #15803d; font-size: 13.5px; font-weight: 600;
+      padding: 14px 16px; border-radius: 12px; margin-bottom: 20px; line-height: 1.5;
+    }
+    .admin-loading {
+      text-align: center; color: var(--slate); font-size: 14px; padding: 60px 20px;
+      background: var(--slate-50); border-radius: var(--radius-md);
+    }
+
+    .bc-card {
+      background: var(--white); border: 1px solid var(--slate-200); border-radius: var(--radius-md);
+      box-shadow: var(--shadow-soft); padding: 24px;
+    }
+    .bc-card .field { margin-bottom: 22px; }
+
+    /* ₹ / % affixes sit inside the app-theme .field input box. */
+    .bc-input-wrap { position: relative; }
+    .bc-input-wrap.has-prefix input { padding-left: 32px; }
+    .bc-input-wrap.has-suffix input { padding-right: 34px; }
+    .bc-input-wrap input::-webkit-outer-spin-button,
+    .bc-input-wrap input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    .bc-input-wrap input[type=number] { -moz-appearance: textfield; appearance: textfield; }
+    .bc-affix {
+      position: absolute; top: 50%; transform: translateY(-50%);
+      color: var(--slate); font-size: 14px; font-weight: 600; pointer-events: none;
+    }
+    .bc-affix.prefix { left: 14px; }
+    .bc-affix.suffix { right: 14px; }
+    .bc-help { color: var(--slate); font-size: 12.5px; margin: 8px 0 0; line-height: 1.5; }
+
+    .bc-actions { display: flex; gap: 10px; margin-top: 4px; }
+    .bc-actions .btn[disabled] { opacity: .5; cursor: not-allowed; box-shadow: none; }
+  </style>
+</head>
+
+<body class="app-theme">
+  <header class="app-nav" id="siteNav">
+    <div class="wrap app-nav-inner">
+      <a href="/admin/" class="app-logo">
+        <i data-lucide="shield-check" style="width:20px;height:20px;color:#f97316;"></i>LOAD<span>24</span>
+        <span style="color:#94a3b8;font-weight:600;font-size:13px;margin-left:4px;">Admin</span>
+      </a>
+      <nav class="app-nav-links">
+        <a href="/admin/">Dashboard</a>
+        <a href="/admin/kyc/">KYC Queue</a>
+        <a href="/admin/trucks/">Truck KYC</a>
+        <a href="/admin/bank-accounts/">Bank Accounts</a>
+        <a href="/admin/withdrawals/">Withdrawals</a>
+        <a href="/admin/wallet-topups/">Wallet Top-Ups</a>
+        <a href="/admin/moderation/">Moderation</a>
+        <a href="/admin/trips/">Trips</a>
+        <a href="/admin/notifications/">Notifications</a>
+        <a href="/admin/users/">Users</a>
+        <a href="/admin/risk/">Risk</a>
+        <a href="/admin/content/">Content</a>
+        <a href="/admin/master-data/">Master Data</a>
+        <a href="/admin/bidding-charges/" class="active">Bidding Charges</a>
+        <a href="/admin/audit-log/">Audit Log</a>
+      </nav>
+      <div class="app-nav-actions">
+        <span id="staffEmail" style="color:#94a3b8;font-size:13px;"></span>
+        <button class="btn btn-ghost-white btn-sm" id="signOutBtn"><i data-lucide="log-out" style="width:15px;height:15px;"></i> Sign Out</button>
+        <button class="app-burger" id="burgerBtn" aria-label="Open menu"><i data-lucide="menu"></i></button>
+      </div>
+    </div>
+    <div class="app-mobile-menu" id="mobileMenu">
+      <a href="/admin/">Dashboard</a>
+      <a href="/admin/kyc/">KYC Queue</a>
+      <a href="/admin/trucks/">Truck KYC</a>
+      <a href="/admin/bank-accounts/">Bank Accounts</a>
+      <a href="/admin/withdrawals/">Withdrawals</a>
+      <a href="/admin/wallet-topups/">Wallet Top-Ups</a>
+      <a href="/admin/moderation/">Moderation</a>
+      <a href="/admin/trips/">Trips</a>
+      <a href="/admin/notifications/">Notifications</a>
+      <a href="/admin/users/">Users</a>
+      <a href="/admin/risk/">Risk</a>
+      <a href="/admin/content/">Content</a>
+      <a href="/admin/master-data/">Master Data</a>
+      <a href="/admin/bidding-charges/">Bidding Charges</a>
+      <a href="/admin/audit-log/">Audit Log</a>
+    </div>
+  </header>
+
+  <main class="admin-wrap">
+    <h1>Bidding Charges</h1>
+    <p class="sub">Platform charge and security-deposit rules the mobile app applies on every bid in the Place Bid screen. Changes are audit-logged.</p>
+
+    <div id="bcError" class="admin-error" hidden></div>
+    <div id="bcSuccess" class="admin-success" hidden></div>
+    <div id="bcLoading" class="admin-loading">Loading…</div>
+
+    <div class="bc-card" id="bcCard" hidden>
+      <div class="field">
+        <label for="bcCharge">Load24 charge (%)</label>
+        <div class="bc-input-wrap has-suffix">
+          <input type="number" id="bcCharge" step="0.1" min="0" max="100" inputmode="decimal" />
+          <span class="bc-affix suffix">%</span>
+        </div>
+        <p class="bc-help">Shown to users as a payment-breakup line on the bid screen — e.g. “Load24 charge (4.0%)”.</p>
+      </div>
+
+      <div class="field">
+        <label for="bcDeposit">Security deposit before bidding (₹)</label>
+        <div class="bc-input-wrap has-prefix">
+          <span class="bc-affix prefix">₹</span>
+          <input type="number" id="bcDeposit" step="100" min="0" inputmode="numeric" />
+        </div>
+        <p class="bc-help">Minimum available wallet balance a user must hold — a bid is rejected before it's placed if their balance is lower.</p>
+      </div>
+
+      <div id="bcFormError" class="admin-error" hidden></div>
+      <div class="bc-actions">
+        <button class="btn btn-brand btn-sm" id="bcSaveBtn" disabled>Save</button>
+      </div>
+    </div>
+  </main>
+
+  <footer class="app-footer">
+    <div class="wrap">
+      <div class="foot-top">
+        <a href="/" class="app-logo"><i data-lucide="truck" style="width:20px;height:20px;color:#f97316;"></i>LOAD24.in</a>
+        <div class="badge badge-green">🟢 All India Services</div>
+      </div>
+      <p class="copyright">© 2026 LOAD24. All rights reserved.</p>
+      <div class="foot-links">
+        <a href="/delete-account/">Delete Account</a><span>|</span>
+        <a href="/PrivacyPolicy/">Privacy Policy</a><span>|</span>
+        <a href="/">Main Site</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Last settings object the server confirmed — the baseline the form is
+    // diffed against so a PATCH only carries the fields that actually changed.
+    let current = null;
+    let saving = false;
+
+    const bcError = document.getElementById('bcError');
+    const bcSuccess = document.getElementById('bcSuccess');
+    const bcLoading = document.getElementById('bcLoading');
+    const bcCard = document.getElementById('bcCard');
+    const bcCharge = document.getElementById('bcCharge');
+    const bcDeposit = document.getElementById('bcDeposit');
+    const bcFormError = document.getElementById('bcFormError');
+    const bcSaveBtn = document.getElementById('bcSaveBtn');
+
+    // Both inputs as numbers. NaN when the field is blank or non-numeric —
+    // the validity and dirty checks both treat that as "no usable value".
+    function formValues() {
+      return {
+        load24_charge_percent: parseFloat(bcCharge.value),
+        security_deposit_amount: parseFloat(bcDeposit.value),
+      };
+    }
+
+    // Mirrors the backend's validation so bad input never leaves the page.
+    function fieldErrors(v) {
+      const errors = [];
+      if (!Number.isFinite(v.load24_charge_percent) || v.load24_charge_percent < 0 || v.load24_charge_percent > 100) {
+        errors.push('Load24 charge must be a number between 0 and 100.');
+      }
+      if (!Number.isFinite(v.security_deposit_amount) || v.security_deposit_amount < 0) {
+        errors.push('Security deposit must be 0 or more.');
+      }
+      return errors;
+    }
+
+    // Only the fields whose value differs from what's saved on the server.
+    function changedFields(v) {
+      const body = {};
+      if (!current) return body;
+      if (v.load24_charge_percent !== current.load24_charge_percent) {
+        body.load24_charge_percent = v.load24_charge_percent;
+      }
+      if (v.security_deposit_amount !== current.security_deposit_amount) {
+        body.security_deposit_amount = v.security_deposit_amount;
+      }
+      return body;
+    }
+
+    function syncSaveButton() {
+      const v = formValues();
+      const dirty = Object.keys(changedFields(v)).length > 0;
+      bcSaveBtn.disabled = saving || !dirty || fieldErrors(v).length > 0;
+    }
+
+    function fillForm(settings) {
+      current = {
+        load24_charge_percent: Number(settings.load24_charge_percent),
+        security_deposit_amount: Number(settings.security_deposit_amount),
+      };
+      bcCharge.value = current.load24_charge_percent;
+      bcDeposit.value = current.security_deposit_amount;
+      syncSaveButton();
+    }
+
+    async function loadSettings() {
+      bcLoading.hidden = false;
+      bcError.hidden = true;
+      bcCard.hidden = true;
+      try {
+        const res = await adminApiFetch('/api/admin/platform-settings/bidding');
+        if (res.status === 403) throw new Error(NO_STAFF_ROLE_MESSAGE);
+        const body = await res.json();
+        if (!res.ok) throw new Error(body.error || `Request failed (${res.status})`);
+
+        fillForm(body);
+        bcLoading.hidden = true;
+        bcCard.hidden = false;
+      } catch (err) {
+        bcLoading.hidden = true;
+        bcError.textContent = err.message;
+        bcError.hidden = false;
+      }
+    }
+
+    [bcCharge, bcDeposit].forEach((el) => {
+      el.addEventListener('input', () => {
+        bcSuccess.hidden = true;
+        bcFormError.hidden = true;
+        syncSaveButton();
+      });
+    });
+
+    bcSaveBtn.addEventListener('click', async () => {
+      bcFormError.hidden = true;
+      bcSuccess.hidden = true;
+
+      const v = formValues();
+      const errors = fieldErrors(v);
+      if (errors.length) {
+        bcFormError.textContent = errors.join(' ');
+        bcFormError.hidden = false;
+        return;
+      }
+      const body = changedFields(v);
+      if (!Object.keys(body).length) return;
+
+      saving = true;
+      syncSaveButton();
+      bcSaveBtn.textContent = 'Saving…';
+      try {
+        const res = await adminApiFetch('/api/admin/platform-settings/bidding', {
+          method: 'PATCH',
+          body: JSON.stringify(body),
+        });
+        if (res.status === 403) throw new Error(NO_STAFF_ROLE_MESSAGE);
+        const resBody = await res.json();
+        if (!res.ok) throw new Error(resBody.error || 'Could not save these settings');
+
+        saving = false;
+        bcSaveBtn.textContent = 'Save';
+        bcSuccess.textContent = 'Bidding charges updated.';
+        bcSuccess.hidden = false;
+        await loadSettings();
+      } catch (err) {
+        saving = false;
+        bcSaveBtn.textContent = 'Save';
+        bcFormError.textContent = err.message;
+        bcFormError.hidden = false;
+        syncSaveButton();
+      }
+    });
+
+    (async function init() {
+      const session = await requireStaffSession();
+      if (!session) return; // already redirected to /admin/login/
+      await initAdminNav();
+      lucide.createIcons();
+      await loadSettings();
+    })();
+
+    const burgerBtn = document.getElementById('burgerBtn');
+    const mobileMenu = document.getElementById('mobileMenu');
+    burgerBtn.addEventListener('click', () => {
+      mobileMenu.classList.toggle('open');
+      burgerBtn.innerHTML = mobileMenu.classList.contains('open') ? '<i data-lucide="x"></i>' : '<i data-lucide="menu"></i>';
+      lucide.createIcons();
+    });
+  </script>
+</body>
+
+</html>

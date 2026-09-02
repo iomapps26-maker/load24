@@ -30,7 +30,18 @@
   <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 
   <style>
-    .app-nav-links { flex-wrap: wrap; row-gap: 6px; }
+    /* 12 nav links don't fit a single row below ~1600px; scroll instead of
+       wrapping, since the fixed-height bar clips a wrapped second row. */
+    .app-nav-links { flex: 1 1 auto; min-width: 0; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: thin; gap: 4px; }
+    .app-nav-links::-webkit-scrollbar { height: 4px; }
+    .app-nav-links::-webkit-scrollbar-thumb { background: rgba(255,255,255,.25); border-radius: 4px; }
+    .app-nav-links a { flex: 0 0 auto; }
+    .app-logo, .app-nav-actions { flex: 0 0 auto; }
+    @media (max-width: 480px) {
+      .app-logo span:last-child { display: none; }
+      #staffEmail { display: none; }
+      #signOutBtn { padding: 8px 10px; }
+    }
 
     .admin-wrap { max-width: 1180px; margin: 0 auto; padding: 48px 20px 80px; }
     .admin-wrap h1 { font-size: 26px; margin: 0 0 8px; }
@@ -88,7 +99,9 @@
         <a href="/admin/">Dashboard</a>
         <a href="/admin/kyc/">KYC Queue</a>
         <a href="/admin/trucks/">Truck KYC</a>
+        <a href="/admin/bank-accounts/">Bank Accounts</a>
         <a href="/admin/withdrawals/">Withdrawals</a>
+        <a href="/admin/wallet-topups/">Wallet Top-Ups</a>
         <a href="/admin/moderation/">Moderation</a>
         <a href="/admin/trips/" class="active">Trips</a>
         <a href="/admin/notifications/">Notifications</a>
@@ -96,6 +109,7 @@
         <a href="/admin/risk/">Risk</a>
         <a href="/admin/content/">Content</a>
         <a href="/admin/master-data/">Master Data</a>
+        <a href="/admin/bidding-charges/">Bidding Charges</a>
         <a href="/admin/audit-log/">Audit Log</a>
       </nav>
       <div class="app-nav-actions">
@@ -108,7 +122,9 @@
       <a href="/admin/">Dashboard</a>
       <a href="/admin/kyc/">KYC Queue</a>
       <a href="/admin/trucks/">Truck KYC</a>
+      <a href="/admin/bank-accounts/">Bank Accounts</a>
       <a href="/admin/withdrawals/">Withdrawals</a>
+      <a href="/admin/wallet-topups/">Wallet Top-Ups</a>
       <a href="/admin/moderation/">Moderation</a>
       <a href="/admin/trips/">Trips</a>
       <a href="/admin/notifications/">Notifications</a>
@@ -116,6 +132,7 @@
       <a href="/admin/risk/">Risk</a>
       <a href="/admin/content/">Content</a>
       <a href="/admin/master-data/">Master Data</a>
+      <a href="/admin/bidding-charges/">Bidding Charges</a>
       <a href="/admin/audit-log/">Audit Log</a>
     </div>
   </header>

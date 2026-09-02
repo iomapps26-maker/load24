@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wallet Top-Ups — LOAD24 Admin</title>
+  <meta name="robots" content="noindex, nofollow" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  <link rel="stylesheet" href="../../css/app-theme.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="../js/admin-shared.js"></script>
+  <style>
+    /* 12 nav links don't fit a single row below ~1600px; scroll instead of
+       wrapping, since the fixed-height bar clips a wrapped second row. */
+    .app-nav-links { flex: 1 1 auto; min-width: 0; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: thin; gap: 4px; }
+    .app-nav-links::-webkit-scrollbar { height: 4px; }
+    .app-nav-links::-webkit-scrollbar-thumb { background: rgba(255,255,255,.25); border-radius: 4px; }
+    .app-nav-links a { flex: 0 0 auto; }
+    .app-logo, .app-nav-actions { flex: 0 0 auto; }
+    @media (max-width: 480px) {
+      .app-logo span:last-child { display: none; }
+      #staffEmail { display: none; }
+      #signOutBtn { padding: 8px 10px; }
+    }
+
+    .admin-wrap { max-width: 900px; margin: 0 auto; padding: 48px 20px 80px; }
+    .admin-wrap-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+    .admin-wrap h1 { font-size: 26px; margin: 0 0 8px; }
+    .admin-wrap p.sub { color: var(--slate); font-size: 14.5px; margin: 0 0 28px; }
+
+    .admin-error {
+      background: #fee2e2;
+      color: #b91c1c;
+      font-size: 13.5px;
+      font-weight: 600;
+      padding: 14px 16px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
+    .admin-loading, .admin-empty {
+      text-align: center;
+      color: var(--slate);
+      font-size: 14px;
+      padding: 60px 20px;
+      background: var(--slate-50);
+      border-radius: var(--radius-md);
+    }
+
+    .topup-case {
+      background: var(--white);
+      border: 1px solid var(--slate-200);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-soft);
+      padding: 22px;
+      margin-bottom: 16px;
+      display: flex;
+      gap: 18px;
+    }
+    .topup-body { flex: 1 1 auto; min-width: 0; }
+    .topup-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+    .topup-name { font-weight: 700; font-size: 15.5px; }
+    .topup-meta { color: var(--slate); font-size: 12.5px; margin-top: 4px; }
+    .topup-amount { font-weight: 800; font-size: 20px; font-family: 'Poppins', sans-serif; color: var(--ink); white-space: nowrap; }
+
+    .topup-reason { margin-top: 14px; display: flex; align-items: flex-start; gap: 8px; flex-wrap: wrap; }
+    .topup-reason-note { color: var(--slate); font-size: 12.5px; font-style: italic; flex-basis: 100%; }
+
+    .topup-txn {
+      margin-top: 12px; font-size: 12px; color: var(--slate-light);
+      font-family: 'SFMono-Regular', Consolas, monospace;
+    }
+
+    .topup-shot-wrap { flex: 0 0 auto; }
+    .topup-shot {
+      width: 108px; height: 108px; border-radius: 10px; border: 1.5px solid var(--slate-200);
+      overflow: hidden; padding: 0; cursor: zoom-in; background: var(--slate-50);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .topup-shot img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .topup-shot-empty {
+      width: 108px; height: 108px; border-radius: 10px; border: 1.5px dashed var(--slate-200);
+      display: flex; align-items: center; justify-content: center; text-align: center;
+      color: var(--slate-light); font-size: 11px; padding: 8px; line-height: 1.4;
+    }
+
+    .topup-error {
+      background: #fee2e2; color: #b91c1c; font-size: 12.5px; font-weight: 600;
+      padding: 8px 12px; border-radius: 8px; margin-top: 14px;
+    }
+
+    .topup-actions { display: flex; gap: 10px; margin-top: 16px; }
+    .topup-reject-panel { margin-top: 14px; }
+    .topup-reject-reason {
+      width: 100%; font-family: inherit; font-size: 13.5px;
+      border: 1.5px solid var(--slate-200); border-radius: 10px;
+      padding: 10px 12px; resize: vertical; min-height: 60px; outline: none;
+    }
+    .topup-reject-reason:focus { border-color: var(--brand); }
+    .topup-reject-reason.invalid { border-color: #dc2626; }
+    .topup-reject-hint { color: #b91c1c; font-size: 12px; font-weight: 600; margin-top: 6px; }
+    .topup-reject-actions { display: flex; gap: 10px; margin-top: 10px; }
+
+    @media (max-width: 560px) {
+      .topup-case { flex-direction: column-reverse; }
+      .topup-shot, .topup-shot-empty { width: 100%; height: 160px; }
+    }
+
+    /* Screenshot lightbox */
+    .topup-lightbox {
+      position: fixed; inset: 0; background: rgba(15, 23, 42, .82);
+      display: flex; align-items: center; justify-content: center;
+      padding: 32px; z-index: 999;
+    }
+    /* `.topup-lightbox { display: flex }` above has the same specificity as
+       the UA stylesheet's `[hidden] { display: none }` and wins on source
+       order, so the hidden attribute alone does nothing here — pin it back
+       with an attribute selector that outranks the bare class. */
+    .topup-lightbox[hidden] { display: none; }
+    .topup-lightbox img {
+      max-width: 100%; max-height: 100%; border-radius: 10px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.5);
+    }
+    .topup-lightbox-close {
+      position: absolute; top: 20px; right: 24px;
+      background: rgba(255,255,255,.12); border: none; color: #fff;
+      width: 40px; height: 40px; border-radius: 999px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .topup-lightbox-close:hover { background: rgba(255,255,255,.22); }
+  </style>
+</head>
+
+<body class="app-theme">
+  <header class="app-nav" id="siteNav">
+    <div class="wrap app-nav-inner">
+      <a href="/admin/" class="app-logo">
+        <i data-lucide="shield-check" style="width:20px;height:20px;color:#f97316;"></i>LOAD<span>24</span>
+        <span style="color:#94a3b8;font-weight:600;font-size:13px;margin-left:4px;">Admin</span>
+      </a>
+      <nav class="app-nav-links">
+        <a href="/admin/">Dashboard</a>
+        <a href="/admin/kyc/">KYC Queue</a>
+        <a href="/admin/trucks/">Truck KYC</a>
+        <a href="/admin/bank-accounts/">Bank Accounts</a>
+        <a href="/admin/withdrawals/">Withdrawals</a>
+        <a href="/admin/wallet-topups/" class="active">Wallet Top-Ups</a>
+        <a href="/admin/moderation/">Moderation</a>
+        <a href="/admin/trips/">Trips</a>
+        <a href="/admin/notifications/">Notifications</a>
+        <a href="/admin/users/">Users</a>
+        <a href="/admin/risk/">Risk</a>
+        <a href="/admin/content/">Content</a>
+        <a href="/admin/master-data/">Master Data</a>
+        <a href="/admin/bidding-charges/">Bidding Charges</a>
+        <a href="/admin/audit-log/">Audit Log</a>
+      </nav>
+      <div class="app-nav-actions">
+        <span id="staffEmail" style="color:#94a3b8;font-size:13px;"></span>
+        <button class="btn btn-ghost-white btn-sm" id="signOutBtn"><i data-lucide="log-out" style="width:15px;height:15px;"></i> Sign Out</button>
+        <button class="app-burger" id="burgerBtn" aria-label="Open menu"><i data-lucide="menu"></i></button>
+      </div>
+    </div>
+    <div class="app-mobile-menu" id="mobileMenu">
+      <a href="/admin/">Dashboard</a>
+      <a href="/admin/kyc/">KYC Queue</a>
+      <a href="/admin/trucks/">Truck KYC</a>
+      <a href="/admin/bank-accounts/">Bank Accounts</a>
+      <a href="/admin/withdrawals/">Withdrawals</a>
+      <a href="/admin/wallet-topups/">Wallet Top-Ups</a>
+      <a href="/admin/moderation/">Moderation</a>
+      <a href="/admin/trips/">Trips</a>
+      <a href="/admin/notifications/">Notifications</a>
+      <a href="/admin/users/">Users</a>
+      <a href="/admin/risk/">Risk</a>
+      <a href="/admin/content/">Content</a>
+      <a href="/admin/master-data/">Master Data</a>
+      <a href="/admin/bidding-charges/">Bidding Charges</a>
+      <a href="/admin/audit-log/">Audit Log</a>
+    </div>
+  </header>
+
+  <main class="admin-wrap">
+    <div class="admin-wrap-head">
+      <div>
+        <h1>Wallet Top-Ups</h1>
+        <p class="sub">Manual top-up requests with a payment screenshot attached, oldest first.</p>
+      </div>
+      <button class="btn btn-outline-slate btn-sm" id="refreshBtn"><i data-lucide="refresh-cw" style="width:14px;height:14px;"></i> Refresh</button>
+    </div>
+
+    <div id="topupError" class="admin-error" hidden></div>
+    <div id="topupLoading" class="admin-loading">Loading queue…</div>
+    <div id="topupEmpty" class="admin-empty" hidden>No wallet top-up requests awaiting review.</div>
+    <div id="topupList"></div>
+  </main>
+
+  <footer class="app-footer">
+    <div class="wrap">
+      <div class="foot-top">
+        <a href="/" class="app-logo"><i data-lucide="truck" style="width:20px;height:20px;color:#f97316;"></i>LOAD24.in</a>
+        <div class="badge badge-green">🟢 All India Services</div>
+      </div>
+      <p class="copyright">© 2026 LOAD24. All rights reserved.</p>
+      <div class="foot-links">
+        <a href="/delete-account/">Delete Account</a><span>|</span>
+        <a href="/PrivacyPolicy/">Privacy Policy</a><span>|</span>
+        <a href="/">Main Site</a>
+      </div>
+    </div>
+  </footer>
+
+  <div class="topup-lightbox" id="shotLightbox" hidden>
+    <button class="topup-lightbox-close" id="shotLightboxClose" aria-label="Close"><i data-lucide="x"></i></button>
+    <img id="shotLightboxImg" src="" alt="Top-up payment screenshot" />
+  </div>
+
+  <script>
+    const loadingEl = document.getElementById('topupLoading');
+    const errorEl = document.getElementById('topupError');
+    const emptyEl = document.getElementById('topupEmpty');
+    const listEl = document.getElementById('topupList');
+    const lightboxEl = document.getElementById('shotLightbox');
+    const lightboxImgEl = document.getElementById('shotLightboxImg');
+
+    function renderShot(item) {
+      if (!item.proof_url) {
+        return '<div class="topup-shot-empty">Preview unavailable — refresh the queue</div>';
+      }
+      // proof_url is a short-lived (5 min) signed link minted fresh on this
+      // fetch — if it's gone stale by the time staff open it, a Refresh
+      // re-fetches the list and mints a new one.
+      return `
+        <button type="button" class="topup-shot" data-action="view-shot" data-url="${escapeHtml(item.proof_url)}">
+          <img src="${escapeHtml(item.proof_url)}" alt="Payment screenshot" loading="lazy"
+               onerror="this.closest('.topup-shot').outerHTML='<div class=&quot;topup-shot-empty&quot;>Screenshot link expired — refresh the queue</div>';" />
+        </button>`;
+    }
+
+    function renderCase(item) {
+      const profile = item.profile || {};
+      const showNote = item.reason_category === 'other' && item.reason_note;
+
+      return `
+        <div class="topup-case" data-id="${escapeHtml(item.id)}">
+          <div class="topup-body">
+            <div class="topup-head">
+              <div>
+                <div class="topup-name">${escapeHtml(profile.full_name || 'Unknown user')}</div>
+                <div class="topup-meta">${escapeHtml(profile.mobile || '—')} · Requested ${formatDate(item.created_at)}</div>
+              </div>
+              <div class="topup-amount">${formatInr(item.amount)}</div>
+            </div>
+            <div class="topup-reason">
+              <span class="badge badge-slate">${escapeHtml(titleCase(item.reason_category))}</span>
+              ${showNote ? `<div class="topup-reason-note">“${escapeHtml(item.reason_note)}”</div>` : ''}
+            </div>
+            <div class="topup-txn">${escapeHtml(item.transaction_id)}</div>
+            <div class="topup-error" hidden></div>
+            <div class="topup-actions">
+              <button class="btn btn-brand btn-sm" data-action="verify"><i data-lucide="check" style="width:14px;height:14px;"></i> Verify</button>
+              <button class="btn btn-outline-slate btn-sm" style="color:#dc2626;border-color:#fecaca;" data-action="reject-toggle"><i data-lucide="x" style="width:14px;height:14px;"></i> Reject</button>
+            </div>
+            <div class="topup-reject-panel" hidden>
+              <textarea class="topup-reject-reason" placeholder="Reason shown to the requester, e.g. Screenshot unreadable"></textarea>
+              <div class="topup-reject-hint" hidden>A reason is required before rejecting.</div>
+              <div class="topup-reject-actions">
+                <button class="btn btn-outline-slate btn-sm" data-action="reject-cancel">Cancel</button>
+                <button class="btn btn-sm" style="background:#dc2626;color:#fff;" data-action="reject-confirm">Confirm Reject</button>
+              </div>
+            </div>
+          </div>
+          <div class="topup-shot-wrap">${renderShot(item)}</div>
+        </div>`;
+    }
+
+    function setCardBusy(cardEl, busy) {
+      cardEl.querySelectorAll('button').forEach((b) => { b.disabled = busy; });
+    }
+
+    function showCardError(cardEl, message) {
+      const box = cardEl.querySelector('.topup-error');
+      box.textContent = message;
+      box.hidden = false;
+    }
+
+    function checkEmpty() {
+      if (!listEl.children.length) emptyEl.hidden = false;
+    }
+
+    function openLightbox(url) {
+      lightboxImgEl.src = url;
+      lightboxEl.hidden = false;
+      lucide.createIcons();
+    }
+
+    function closeLightbox() {
+      lightboxEl.hidden = true;
+      lightboxImgEl.src = '';
+    }
+
+    async function loadQueue() {
+      loadingEl.hidden = false;
+      errorEl.hidden = true;
+      emptyEl.hidden = true;
+      listEl.innerHTML = '';
+      try {
+        const res = await adminApiFetch('/api/wallet/topup-requests/pending');
+        if (res.status === 403) throw new Error(NO_STAFF_ROLE_MESSAGE);
+        const body = await res.json();
+        if (!res.ok) throw new Error(body.error || `Request failed (${res.status})`);
+
+        loadingEl.hidden = true;
+        if (!body.length) {
+          emptyEl.hidden = false;
+          return;
+        }
+        listEl.innerHTML = body.map(renderCase).join('');
+        lucide.createIcons();
+      } catch (err) {
+        loadingEl.hidden = true;
+        errorEl.textContent = err.message;
+        errorEl.hidden = false;
+      }
+    }
+
+    listEl.addEventListener('click', async (e) => {
+      const btn = e.target.closest('button[data-action]');
+      if (!btn) return;
+      const action = btn.dataset.action;
+
+      if (action === 'view-shot') {
+        openLightbox(btn.dataset.url);
+        return;
+      }
+
+      const cardEl = btn.closest('.topup-case');
+      const id = cardEl.dataset.id;
+      const panel = cardEl.querySelector('.topup-reject-panel');
+
+      if (action === 'reject-toggle') {
+        panel.hidden = !panel.hidden;
+        return;
+      }
+      if (action === 'reject-cancel') {
+        panel.hidden = true;
+        return;
+      }
+
+      if (action === 'verify') {
+        setCardBusy(cardEl, true);
+        try {
+          const res = await adminApiFetch(`/api/wallet/topup-requests/${id}/verify`, { method: 'POST' });
+          if (res.status === 409) {
+            showCardError(cardEl, 'Already reviewed by someone else — refreshing the list…');
+            await loadQueue();
+            return;
+          }
+          const body = await res.json();
+          if (!res.ok) throw new Error(body.error || 'Failed to verify');
+          cardEl.remove();
+          checkEmpty();
+        } catch (err) {
+          setCardBusy(cardEl, false);
+          showCardError(cardEl, err.message);
+        }
+        return;
+      }
+
+      if (action === 'reject-confirm') {
+        const textarea = cardEl.querySelector('.topup-reject-reason');
+        const hint = cardEl.querySelector('.topup-reject-hint');
+        const reason = textarea.value.trim();
+        if (!reason) {
+          textarea.classList.add('invalid');
+          hint.hidden = false;
+          textarea.focus();
+          return;
+        }
+        textarea.classList.remove('invalid');
+        hint.hidden = true;
+
+        setCardBusy(cardEl, true);
+        try {
+          const res = await adminApiFetch(`/api/wallet/topup-requests/${id}/reject`, {
+            method: 'POST',
+            body: JSON.stringify({ reason })
+          });
+          if (res.status === 409) {
+            showCardError(cardEl, 'Already reviewed by someone else — refreshing the list…');
+            await loadQueue();
+            return;
+          }
+          const body = await res.json();
+          if (!res.ok) throw new Error(body.error || 'Failed to reject');
+          cardEl.remove();
+          checkEmpty();
+        } catch (err) {
+          setCardBusy(cardEl, false);
+          showCardError(cardEl, err.message);
+        }
+      }
+    });
+
+    document.getElementById('refreshBtn').addEventListener('click', loadQueue);
+    document.getElementById('shotLightboxClose').addEventListener('click', closeLightbox);
+    lightboxEl.addEventListener('click', (e) => { if (e.target === lightboxEl) closeLightbox(); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !lightboxEl.hidden) closeLightbox(); });
+
+    (async function init() {
+      const session = await requireStaffSession();
+      if (!session) return; // already redirected to /admin/login/
+      await initAdminNav();
+      lucide.createIcons();
+      await loadQueue();
+    })();
+
+    const burgerBtn = document.getElementById('burgerBtn');
+    const mobileMenu = document.getElementById('mobileMenu');
+    burgerBtn.addEventListener('click', () => {
+      mobileMenu.classList.toggle('open');
+      burgerBtn.innerHTML = mobileMenu.classList.contains('open') ? '<i data-lucide="x"></i>' : '<i data-lucide="menu"></i>';
+      lucide.createIcons();
+    });
+  </script>
+</body>
+
+</html>

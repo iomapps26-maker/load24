@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bank Accounts — LOAD24 Admin</title>
+  <meta name="robots" content="noindex, nofollow" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  <link rel="stylesheet" href="../../css/app-theme.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="../js/admin-shared.js"></script>
+  <style>
+    /* 12 nav links don't fit a single row below ~1600px; scroll instead of
+       wrapping, since the fixed-height bar clips a wrapped second row. */
+    .app-nav-links { flex: 1 1 auto; min-width: 0; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: thin; gap: 4px; }
+    .app-nav-links::-webkit-scrollbar { height: 4px; }
+    .app-nav-links::-webkit-scrollbar-thumb { background: rgba(255,255,255,.25); border-radius: 4px; }
+    .app-nav-links a { flex: 0 0 auto; }
+    .app-logo, .app-nav-actions { flex: 0 0 auto; }
+    @media (max-width: 480px) {
+      .app-logo span:last-child { display: none; }
+      #staffEmail { display: none; }
+      #signOutBtn { padding: 8px 10px; }
+    }
+
+    .admin-wrap { max-width: 900px; margin: 0 auto; padding: 48px 20px 80px; }
+    .admin-wrap-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+    .admin-wrap h1 { font-size: 26px; margin: 0 0 8px; }
+    .admin-wrap p.sub { color: var(--slate); font-size: 14.5px; margin: 0 0 28px; }
+
+    .admin-error {
+      background: #fee2e2;
+      color: #b91c1c;
+      font-size: 13.5px;
+      font-weight: 600;
+      padding: 14px 16px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
+    .admin-loading, .admin-empty {
+      text-align: center;
+      color: var(--slate);
+      font-size: 14px;
+      padding: 60px 20px;
+      background: var(--slate-50);
+      border-radius: var(--radius-md);
+    }
+
+    .ba-case {
+      background: var(--white);
+      border: 1px solid var(--slate-200);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-soft);
+      padding: 22px;
+      margin-bottom: 16px;
+      display: flex;
+      gap: 18px;
+    }
+    .ba-body { flex: 1 1 auto; min-width: 0; }
+    .ba-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+    .ba-name { font-weight: 700; font-size: 15.5px; }
+    .ba-meta { color: var(--slate); font-size: 12.5px; margin-top: 4px; }
+
+    .ba-bank {
+      display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px;
+      background: var(--slate-50); border-radius: 12px; padding: 14px 16px; margin-top: 16px;
+    }
+    .ba-bank div span { display: block; font-size: 11px; color: var(--slate-light); margin-bottom: 3px; }
+    .ba-bank div b { font-size: 13.5px; color: var(--ink); word-break: break-word; }
+    .ba-bank .ba-mono b { font-family: 'SFMono-Regular', Consolas, monospace; letter-spacing: .5px; }
+
+    .ba-error {
+      background: #fee2e2; color: #b91c1c; font-size: 12.5px; font-weight: 600;
+      padding: 8px 12px; border-radius: 8px; margin-top: 14px;
+    }
+
+    .ba-proof-wrap { flex: 0 0 auto; }
+    .ba-proof {
+      width: 132px; height: 132px; border-radius: 10px; border: 1.5px solid var(--slate-200);
+      overflow: hidden; padding: 0; cursor: zoom-in; background: var(--slate-50);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .ba-proof img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .ba-proof-empty {
+      width: 132px; height: 132px; border-radius: 10px; border: 1.5px dashed var(--slate-200);
+      display: flex; align-items: center; justify-content: center; text-align: center;
+      color: var(--slate-light); font-size: 11px; padding: 8px; line-height: 1.4;
+    }
+    .ba-proof-cap { text-align: center; color: var(--slate-light); font-size: 11px; margin-top: 6px; }
+
+    .ba-actions { display: flex; gap: 10px; margin-top: 16px; }
+    .ba-reject-panel { margin-top: 14px; }
+    .ba-reject-reason {
+      width: 100%; font-family: inherit; font-size: 13.5px;
+      border: 1.5px solid var(--slate-200); border-radius: 10px;
+      padding: 10px 12px; resize: vertical; min-height: 60px; outline: none;
+    }
+    .ba-reject-reason:focus { border-color: var(--brand); }
+    .ba-reject-reason.invalid { border-color: #dc2626; }
+    .ba-reject-hint { color: #b91c1c; font-size: 12px; font-weight: 600; margin-top: 6px; }
+    .ba-reject-actions { display: flex; gap: 10px; margin-top: 10px; }
+
+    @media (max-width: 560px) {
+      .ba-case { flex-direction: column-reverse; }
+      .ba-proof, .ba-proof-empty { width: 100%; height: 170px; }
+      .ba-bank { grid-template-columns: 1fr; }
+    }
+
+    /* Proof lightbox */
+    .ba-lightbox {
+      position: fixed; inset: 0; background: rgba(15, 23, 42, .82);
+      display: flex; align-items: center; justify-content: center;
+      padding: 32px; z-index: 999;
+    }
+    /* `.ba-lightbox { display: flex }` above has the same specificity as the
+       UA stylesheet's `[hidden] { display: none }` and wins on source order,
+       so the hidden attribute alone does nothing here — pin it back with an
+       attribute selector that outranks the bare class. */
+    .ba-lightbox[hidden] { display: none; }
+    .ba-lightbox img {
+      max-width: 100%; max-height: 100%; border-radius: 10px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.5);
+    }
+    .ba-lightbox-close {
+      position: absolute; top: 20px; right: 24px;
+      background: rgba(255,255,255,.12); border: none; color: #fff;
+      width: 40px; height: 40px; border-radius: 999px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .ba-lightbox-close:hover { background: rgba(255,255,255,.22); }
+  </style>
+</head>
+
+<body class="app-theme">
+  <header class="app-nav" id="siteNav">
+    <div class="wrap app-nav-inner">
+      <a href="/admin/" class="app-logo">
+        <i data-lucide="shield-check" style="width:20px;height:20px;color:#f97316;"></i>LOAD<span>24</span>
+        <span style="color:#94a3b8;font-weight:600;font-size:13px;margin-left:4px;">Admin</span>
+      </a>
+      <nav class="app-nav-links">
+        <a href="/admin/">Dashboard</a>
+        <a href="/admin/kyc/">KYC Queue</a>
+        <a href="/admin/trucks/">Truck KYC</a>
+        <a href="/admin/bank-accounts/" class="active">Bank Accounts</a>
+        <a href="/admin/withdrawals/">Withdrawals</a>
+        <a href="/admin/wallet-topups/">Wallet Top-Ups</a>
+        <a href="/admin/moderation/">Moderation</a>
+        <a href="/admin/trips/">Trips</a>
+        <a href="/admin/notifications/">Notifications</a>
+        <a href="/admin/users/">Users</a>
+        <a href="/admin/risk/">Risk</a>
+        <a href="/admin/content/">Content</a>
+        <a href="/admin/master-data/">Master Data</a>
+        <a href="/admin/bidding-charges/">Bidding Charges</a>
+        <a href="/admin/audit-log/">Audit Log</a>
+      </nav>
+      <div class="app-nav-actions">
+        <span id="staffEmail" style="color:#94a3b8;font-size:13px;"></span>
+        <button class="btn btn-ghost-white btn-sm" id="signOutBtn"><i data-lucide="log-out" style="width:15px;height:15px;"></i> Sign Out</button>
+        <button class="app-burger" id="burgerBtn" aria-label="Open menu"><i data-lucide="menu"></i></button>
+      </div>
+    </div>
+    <div class="app-mobile-menu" id="mobileMenu">
+      <a href="/admin/">Dashboard</a>
+      <a href="/admin/kyc/">KYC Queue</a>
+      <a href="/admin/trucks/">Truck KYC</a>
+      <a href="/admin/bank-accounts/">Bank Accounts</a>
+      <a href="/admin/withdrawals/">Withdrawals</a>
+      <a href="/admin/wallet-topups/">Wallet Top-Ups</a>
+      <a href="/admin/moderation/">Moderation</a>
+      <a href="/admin/trips/">Trips</a>
+      <a href="/admin/notifications/">Notifications</a>
+      <a href="/admin/users/">Users</a>
+      <a href="/admin/risk/">Risk</a>
+      <a href="/admin/content/">Content</a>
+      <a href="/admin/master-data/">Master Data</a>
+      <a href="/admin/bidding-charges/">Bidding Charges</a>
+      <a href="/admin/audit-log/">Audit Log</a>
+    </div>
+  </header>
+
+  <main class="admin-wrap">
+    <div class="admin-wrap-head">
+      <div>
+        <h1>Bank Accounts</h1>
+        <p class="sub">User payout bank accounts awaiting verification, oldest first.</p>
+      </div>
+      <button class="btn btn-outline-slate btn-sm" id="refreshBtn"><i data-lucide="refresh-cw" style="width:14px;height:14px;"></i> Refresh</button>
+    </div>
+
+    <div id="baError" class="admin-error" hidden></div>
+    <div id="baLoading" class="admin-loading">Loading queue…</div>
+    <div id="baEmpty" class="admin-empty" hidden>No bank accounts awaiting verification.</div>
+    <div id="baList"></div>
+  </main>
+
+  <footer class="app-footer">
+    <div class="wrap">
+      <div class="foot-top">
+        <a href="/" class="app-logo"><i data-lucide="truck" style="width:20px;height:20px;color:#f97316;"></i>LOAD24.in</a>
+        <div class="badge badge-green">🟢 All India Services</div>
+      </div>
+      <p class="copyright">© 2026 LOAD24. All rights reserved.</p>
+      <div class="foot-links">
+        <a href="/delete-account/">Delete Account</a><span>|</span>
+        <a href="/PrivacyPolicy/">Privacy Policy</a><span>|</span>
+        <a href="/">Main Site</a>
+      </div>
+    </div>
+  </footer>
+
+  <div class="ba-lightbox" id="proofLightbox" hidden>
+    <button class="ba-lightbox-close" id="proofLightboxClose" aria-label="Close"><i data-lucide="x"></i></button>
+    <img id="proofLightboxImg" src="" alt="Bank proof document" />
+  </div>
+
+  <script>
+    const loadingEl = document.getElementById('baLoading');
+    const errorEl = document.getElementById('baError');
+    const emptyEl = document.getElementById('baEmpty');
+    const listEl = document.getElementById('baList');
+    const lightboxEl = document.getElementById('proofLightbox');
+    const lightboxImgEl = document.getElementById('proofLightboxImg');
+
+    function renderProof(item) {
+      if (!item.proof_url) {
+        return `
+          <div class="ba-proof-empty">No proof document uploaded</div>
+          <div class="ba-proof-cap">Cancelled cheque / passbook</div>`;
+      }
+      // proof_url is a short-lived (5 min) signed link minted fresh on this
+      // fetch — if it's gone stale by the time staff open it, a Refresh
+      // re-fetches the list and mints a new one.
+      return `
+        <button type="button" class="ba-proof" data-action="view-proof" data-url="${escapeHtml(item.proof_url)}">
+          <img src="${escapeHtml(item.proof_url)}" alt="Bank proof document" loading="lazy"
+               onerror="this.closest('.ba-proof').outerHTML='<div class=&quot;ba-proof-empty&quot;>Document link expired — refresh the queue</div>';" />
+        </button>
+        <div class="ba-proof-cap">Cancelled cheque / passbook</div>`;
+    }
+
+    function renderCase(item) {
+      const profile = item.profile || {};
+
+      return `
+        <div class="ba-case" data-id="${escapeHtml(item.id)}">
+          <div class="ba-body">
+            <div class="ba-head">
+              <div>
+                <div class="ba-name">${escapeHtml(profile.full_name || 'Unknown user')}</div>
+                <div class="ba-meta">${escapeHtml(profile.mobile || '—')}${profile.city ? ' · ' + escapeHtml(profile.city) : ''} · Submitted ${formatDate(item.created_at)}</div>
+              </div>
+              <div class="badge badge-orange">Pending</div>
+            </div>
+            <div class="ba-bank">
+              <div><span>Account Holder</span><b>${escapeHtml(item.bank_account_holder_name || '—')}</b></div>
+              <div class="ba-mono"><span>Account Number</span><b>${escapeHtml(item.bank_account_number || '—')}</b></div>
+              <div class="ba-mono"><span>IFSC</span><b>${escapeHtml(item.bank_ifsc_code || '—')}</b></div>
+              <div><span>Bank</span><b>${escapeHtml(item.bank_name || '—')}</b></div>
+              <div><span>Branch</span><b>${escapeHtml(item.bank_branch || '—')}</b></div>
+              <div><span>Account Type</span><b>${escapeHtml(titleCase(item.account_type) || '—')}</b></div>
+            </div>
+            <div class="ba-error" hidden></div>
+            <div class="ba-actions">
+              <button class="btn btn-brand btn-sm" data-action="verify"><i data-lucide="check" style="width:14px;height:14px;"></i> Verify</button>
+              <button class="btn btn-outline-slate btn-sm" style="color:#dc2626;border-color:#fecaca;" data-action="reject-toggle"><i data-lucide="x" style="width:14px;height:14px;"></i> Reject</button>
+            </div>
+            <div class="ba-reject-panel" hidden>
+              <textarea class="ba-reject-reason" placeholder="Reason shown to the user, e.g. Name on account does not match KYC"></textarea>
+              <div class="ba-reject-hint" hidden>A reason is required before rejecting.</div>
+              <div class="ba-reject-actions">
+                <button class="btn btn-outline-slate btn-sm" data-action="reject-cancel">Cancel</button>
+                <button class="btn btn-sm" style="background:#dc2626;color:#fff;" data-action="reject-confirm">Confirm Reject</button>
+              </div>
+            </div>
+          </div>
+          <div class="ba-proof-wrap">${renderProof(item)}</div>
+        </div>`;
+    }
+
+    function setCardBusy(cardEl, busy) {
+      cardEl.querySelectorAll('button').forEach((b) => { b.disabled = busy; });
+    }
+
+    function showCardError(cardEl, message) {
+      const box = cardEl.querySelector('.ba-error');
+      box.textContent = message;
+      box.hidden = false;
+    }
+
+    function checkEmpty() {
+      if (!listEl.children.length) emptyEl.hidden = false;
+    }
+
+    // The bank-accounts API routes aren't deployed yet, so a call can come
+    // back as an HTML 404 page rather than JSON — parsing that would throw a
+    // cryptic "Unexpected token '<'". Read it safely and surface a clear
+    // message instead until the backend ships.
+    async function readJson(res) {
+      try { return await res.json(); }
+      catch { return null; }
+    }
+
+    function apiError(res, body, fallback) {
+      if (body && body.error) return new Error(body.error);
+      if (res.status === 404) return new Error('The bank-accounts API is not deployed yet — this page will work once the backend routes are live.');
+      return new Error(fallback + ` (${res.status})`);
+    }
+
+    function openLightbox(url) {
+      lightboxImgEl.src = url;
+      lightboxEl.hidden = false;
+      lucide.createIcons();
+    }
+
+    function closeLightbox() {
+      lightboxEl.hidden = true;
+      lightboxImgEl.src = '';
+    }
+
+    async function loadQueue() {
+      loadingEl.hidden = false;
+      errorEl.hidden = true;
+      emptyEl.hidden = true;
+      listEl.innerHTML = '';
+      try {
+        const res = await adminApiFetch('/api/profile/bank-accounts/pending');
+        if (res.status === 403) throw new Error(NO_STAFF_ROLE_MESSAGE);
+        const body = await readJson(res);
+        if (!res.ok || !Array.isArray(body)) throw apiError(res, body, 'Request failed');
+
+        loadingEl.hidden = true;
+        if (!body.length) {
+          emptyEl.hidden = false;
+          return;
+        }
+        listEl.innerHTML = body.map(renderCase).join('');
+        lucide.createIcons();
+      } catch (err) {
+        loadingEl.hidden = true;
+        errorEl.textContent = err.message;
+        errorEl.hidden = false;
+      }
+    }
+
+    listEl.addEventListener('click', async (e) => {
+      const btn = e.target.closest('button[data-action]');
+      if (!btn) return;
+      const action = btn.dataset.action;
+
+      if (action === 'view-proof') {
+        openLightbox(btn.dataset.url);
+        return;
+      }
+
+      const cardEl = btn.closest('.ba-case');
+      const id = cardEl.dataset.id;
+      const panel = cardEl.querySelector('.ba-reject-panel');
+
+      if (action === 'reject-toggle') {
+        panel.hidden = !panel.hidden;
+        return;
+      }
+      if (action === 'reject-cancel') {
+        panel.hidden = true;
+        return;
+      }
+
+      if (action === 'verify') {
+        setCardBusy(cardEl, true);
+        try {
+          const res = await adminApiFetch(`/api/profile/bank-accounts/${id}/verify`, { method: 'POST' });
+          if (res.status === 409) {
+            showCardError(cardEl, 'Already reviewed by someone else — refreshing the list…');
+            await loadQueue();
+            return;
+          }
+          const body = await readJson(res);
+          if (!res.ok) throw apiError(res, body, 'Failed to verify');
+          cardEl.remove();
+          checkEmpty();
+        } catch (err) {
+          setCardBusy(cardEl, false);
+          showCardError(cardEl, err.message);
+        }
+        return;
+      }
+
+      if (action === 'reject-confirm') {
+        const textarea = cardEl.querySelector('.ba-reject-reason');
+        const hint = cardEl.querySelector('.ba-reject-hint');
+        const reason = textarea.value.trim();
+        if (!reason) {
+          textarea.classList.add('invalid');
+          hint.hidden = false;
+          textarea.focus();
+          return;
+        }
+        textarea.classList.remove('invalid');
+        hint.hidden = true;
+
+        setCardBusy(cardEl, true);
+        try {
+          const res = await adminApiFetch(`/api/profile/bank-accounts/${id}/reject`, {
+            method: 'POST',
+            body: JSON.stringify({ reason })
+          });
+          if (res.status === 409) {
+            showCardError(cardEl, 'Already reviewed by someone else — refreshing the list…');
+            await loadQueue();
+            return;
+          }
+          const body = await readJson(res);
+          if (!res.ok) throw apiError(res, body, 'Failed to reject');
+          cardEl.remove();
+          checkEmpty();
+        } catch (err) {
+          setCardBusy(cardEl, false);
+          showCardError(cardEl, err.message);
+        }
+      }
+    });
+
+    document.getElementById('refreshBtn').addEventListener('click', loadQueue);
+    document.getElementById('proofLightboxClose').addEventListener('click', closeLightbox);
+    lightboxEl.addEventListener('click', (e) => { if (e.target === lightboxEl) closeLightbox(); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !lightboxEl.hidden) closeLightbox(); });
+
+    (async function init() {
+      const session = await requireStaffSession();
+      if (!session) return; // already redirected to /admin/login/
+      await initAdminNav();
+      lucide.createIcons();
+      await loadQueue();
+    })();
+
+    const burgerBtn = document.getElementById('burgerBtn');
+    const mobileMenu = document.getElementById('mobileMenu');
+    burgerBtn.addEventListener('click', () => {
+      mobileMenu.classList.toggle('open');
+      burgerBtn.innerHTML = mobileMenu.classList.contains('open') ? '<i data-lucide="x"></i>' : '<i data-lucide="menu"></i>';
+      lucide.createIcons();
+    });
+  </script>
+</body>
+
+</html>

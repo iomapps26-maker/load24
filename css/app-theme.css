@@ -116,7 +116,7 @@ body.app-theme {
   padding: 10px 20px 18px;
 }
 
-.app-mobile-menu.open { display: flex; }
+.app-mobile-menu.open { display: flex; max-height: calc(100vh - 64px); overflow-y: auto; }
 
 .app-mobile-menu a {
   color: #e2e8f0;
