@@ -87,7 +87,75 @@
     .wd-reject-reason:focus { border-color: var(--brand); }
     .wd-reject-actions { display: flex; gap: 10px; margin-top: 10px; }
 
+    /* Mark-Paid panel — proof screenshot + optional bank reference */
+    .wd-pay-panel {
+      margin-top: 14px; background: var(--slate-50);
+      border: 1px solid var(--slate-200); border-radius: 12px; padding: 16px;
+    }
+    .wd-pay-label { font-size: 12px; font-weight: 600; color: var(--slate); margin-bottom: 6px; }
+    .wd-pay-label span { color: #dc2626; }
+    .wd-pay-drop {
+      border: 1.5px dashed var(--slate-200); border-radius: 10px; background: var(--white);
+      padding: 18px 14px; text-align: center; cursor: pointer; transition: border-color .15s;
+    }
+    .wd-pay-drop:hover, .wd-pay-drop.dragover { border-color: var(--brand); }
+    .wd-pay-drop-hint { font-size: 12.5px; color: var(--slate-light); line-height: 1.5; }
+    .wd-pay-file { display: none; }
+    .wd-pay-preview { margin-top: 12px; display: flex; align-items: center; gap: 12px; }
+    .wd-pay-preview[hidden] { display: none; }
+    .wd-pay-preview img {
+      width: 80px; height: 80px; object-fit: cover; border-radius: 8px;
+      border: 1.5px solid var(--slate-200); flex: 0 0 auto;
+    }
+    .wd-pay-preview-name { font-size: 12.5px; color: var(--ink); word-break: break-all; }
+    .wd-pay-preview-clear {
+      background: none; border: none; color: #dc2626; font-size: 12px; font-weight: 600;
+      cursor: pointer; padding: 4px 0; margin-top: 2px;
+    }
+    .wd-pay-ref {
+      width: 100%; font-family: inherit; font-size: 13.5px; margin-top: 12px;
+      border: 1.5px solid var(--slate-200); border-radius: 10px; padding: 10px 12px; outline: none;
+    }
+    .wd-pay-ref:focus { border-color: var(--brand); }
+    .wd-pay-hint { color: #b91c1c; font-size: 12px; font-weight: 600; margin-top: 8px; }
+    .wd-pay-actions { display: flex; gap: 10px; margin-top: 12px; }
+
+    /* Proof screenshot shown on a paid request */
+    .wd-paid-proof {
+      margin-top: 16px; display: flex; gap: 14px; align-items: flex-start;
+      background: var(--slate-50); border-radius: 12px; padding: 14px 16px;
+    }
+    /* bare-class `display: flex` outranks the UA `[hidden]` rule — pin it back */
+    .wd-paid-proof[hidden] { display: none; }
+    .wd-paid-proof button.wd-shot {
+      width: 92px; height: 92px; border-radius: 10px; border: 1.5px solid var(--slate-200);
+      overflow: hidden; padding: 0; cursor: zoom-in; background: var(--white); flex: 0 0 auto;
+    }
+    .wd-paid-proof button.wd-shot img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .wd-shot-empty {
+      width: 92px; height: 92px; border-radius: 10px; border: 1.5px dashed var(--slate-200);
+      display: flex; align-items: center; justify-content: center; text-align: center;
+      color: var(--slate-light); font-size: 10.5px; padding: 8px; line-height: 1.4; flex: 0 0 auto;
+    }
+    .wd-paid-proof-meta span { display: block; font-size: 11px; color: var(--slate-light); margin-bottom: 2px; }
+    .wd-paid-proof-meta b { font-size: 13px; color: var(--ink); }
+    .wd-paid-proof-meta .wd-paid-ref { margin-top: 8px; font-weight: 600; }
+
     @media (max-width: 700px) { .wd-bank { grid-template-columns: repeat(2, 1fr); } }
+
+    /* Screenshot lightbox — same pattern as the Wallet Top-Ups page */
+    .wd-lightbox {
+      position: fixed; inset: 0; background: rgba(15, 23, 42, .82);
+      display: flex; align-items: center; justify-content: center; padding: 32px; z-index: 999;
+    }
+    .wd-lightbox[hidden] { display: none; }
+    .wd-lightbox img { max-width: 100%; max-height: 100%; border-radius: 10px; box-shadow: 0 20px 60px rgba(0,0,0,.5); }
+    .wd-lightbox-close {
+      position: absolute; top: 20px; right: 24px; background: rgba(255,255,255,.12);
+      border: none; color: #fff; width: 40px; height: 40px; border-radius: 999px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .wd-lightbox-close:hover { background: rgba(255,255,255,.22); }
   </style>
 </head>
 
@@ -165,13 +233,21 @@
     </div>
   </footer>
 
+  <div class="wd-lightbox" id="proofLightbox" hidden>
+    <button class="wd-lightbox-close" id="proofLightboxClose" aria-label="Close"><i data-lucide="x"></i></button>
+    <img id="proofLightboxImg" src="" alt="Withdrawal payment proof" />
+  </div>
+
   <script>
     const loadingEl = document.getElementById('wdLoading');
     const errorEl = document.getElementById('wdError');
     const emptyEl = document.getElementById('wdEmpty');
     const listEl = document.getElementById('wdList');
+    const lightboxEl = document.getElementById('proofLightbox');
+    const lightboxImgEl = document.getElementById('proofLightboxImg');
 
     const STATUS_BADGE = { pending: 'badge-orange', approved: 'badge-blue', paid: 'badge-green', rejected: 'badge-red' };
+    const MAX_PROOF_BYTES = 10 * 1024 * 1024; // 10 MB — cosmetic client guard; the API re-checks
 
     function renderActions(status) {
       if (status === 'pending') {
@@ -181,10 +257,27 @@
       }
       if (status === 'approved') {
         return `
-          <button class="btn btn-brand btn-sm" data-action="pay"><i data-lucide="banknote" style="width:14px;height:14px;"></i> Mark Paid</button>
+          <button class="btn btn-brand btn-sm" data-action="pay-toggle"><i data-lucide="banknote" style="width:14px;height:14px;"></i> Mark Paid</button>
           <button class="btn btn-outline-slate btn-sm" style="color:#dc2626;border-color:#fecaca;" data-action="reject-toggle"><i data-lucide="x" style="width:14px;height:14px;"></i> Reject</button>`;
       }
       return ''; // paid / rejected — nothing left to do
+    }
+
+    function renderPaidProof(row) {
+      const shot = row.payment_proof_url
+        ? `<button type="button" class="wd-shot" data-action="view-proof" data-url="${escapeHtml(row.payment_proof_url)}">
+             <img src="${escapeHtml(row.payment_proof_url)}" alt="Payment proof" loading="lazy"
+                  onerror="this.closest('.wd-shot').outerHTML='<div class=&quot;wd-shot-empty&quot;>Link expired — reload the page</div>';" />
+           </button>`
+        : '<div class="wd-shot-empty">No proof on file</div>';
+      const ref = row.payment_reference
+        ? `<div class="wd-paid-ref"><span>Bank reference / UTR</span><b>${escapeHtml(row.payment_reference)}</b></div>`
+        : '';
+      return `${shot}
+        <div class="wd-paid-proof-meta">
+          <span>Marked paid</span><b>${formatDate(row.paid_at || row.updated_at || row.created_at)}</b>
+          ${ref}
+        </div>`;
     }
 
     function renderCase(row) {
@@ -203,6 +296,7 @@
             <div><span>IFSC</span><b>${escapeHtml(row.bank_ifsc_code)}</b></div>
             <div><span>Bank</span><b>${escapeHtml(row.bank_name)}</b></div>
           </div>
+          <div class="wd-paid-proof" data-role="paid-proof" ${row.status === 'paid' ? '' : 'hidden'}>${row.status === 'paid' ? renderPaidProof(row) : ''}</div>
           <div class="wd-error" hidden></div>
           <div class="wd-actions" data-role="actions">${renderActions(row.status)}</div>
           <div class="wd-reject-panel" hidden>
@@ -210,6 +304,26 @@
             <div class="wd-reject-actions">
               <button class="btn btn-outline-slate btn-sm" data-action="reject-cancel">Cancel</button>
               <button class="btn btn-sm" style="background:#dc2626;color:#fff;" data-action="reject-confirm">Confirm Reject</button>
+            </div>
+          </div>
+          <div class="wd-pay-panel" hidden>
+            <div class="wd-pay-label">Payment proof screenshot <span>*</span></div>
+            <div class="wd-pay-drop" data-action="pay-pick">
+              <div class="wd-pay-drop-hint">Click to choose or drop an image<br>bank / UPI transfer receipt · PNG, JPG or WebP · max 10&nbsp;MB</div>
+            </div>
+            <input type="file" class="wd-pay-file" accept="image/png,image/jpeg,image/webp" />
+            <div class="wd-pay-preview" hidden>
+              <img alt="Selected proof preview" />
+              <div>
+                <div class="wd-pay-preview-name"></div>
+                <button type="button" class="wd-pay-preview-clear" data-action="pay-clear-file">Remove</button>
+              </div>
+            </div>
+            <input type="text" class="wd-pay-ref" placeholder="Bank reference / UTR number (optional)" maxlength="64" />
+            <div class="wd-pay-hint" hidden></div>
+            <div class="wd-pay-actions">
+              <button class="btn btn-outline-slate btn-sm" data-action="pay-cancel">Cancel</button>
+              <button class="btn btn-brand btn-sm" data-action="pay-confirm"><i data-lucide="check" style="width:14px;height:14px;"></i> Confirm Payment</button>
             </div>
           </div>
         </div>`;
@@ -225,6 +339,47 @@
       box.hidden = false;
     }
 
+    // Keeps the <input type="file"> as the single source of truth for the
+    // selected proof (works for both the native picker and drag-drop) and
+    // refreshes the inline thumbnail preview.
+    function setCardProofFile(cardEl, file) {
+      const input = cardEl.querySelector('.wd-pay-file');
+      const dt = new DataTransfer();
+      if (file) dt.items.add(file);
+      input.files = dt.files;
+      refreshProofPreview(cardEl);
+    }
+
+    function refreshProofPreview(cardEl) {
+      const file = cardEl.querySelector('.wd-pay-file').files[0];
+      const preview = cardEl.querySelector('.wd-pay-preview');
+      const img = preview.querySelector('img');
+      cardEl.querySelector('.wd-pay-hint').hidden = true;
+      if (img.dataset.objurl) { URL.revokeObjectURL(img.dataset.objurl); delete img.dataset.objurl; }
+      if (!file) {
+        img.removeAttribute('src');
+        preview.hidden = true;
+        return;
+      }
+      const url = URL.createObjectURL(file);
+      img.dataset.objurl = url;
+      img.src = url;
+      preview.querySelector('.wd-pay-preview-name').textContent =
+        `${file.name} · ${(file.size / 1024 / 1024).toFixed(1)} MB`;
+      preview.hidden = false;
+    }
+
+    function openLightbox(url) {
+      lightboxImgEl.src = url;
+      lightboxEl.hidden = false;
+      lucide.createIcons();
+    }
+
+    function closeLightbox() {
+      lightboxEl.hidden = true;
+      lightboxImgEl.src = '';
+    }
+
     function applyStatus(cardEl, row) {
       cardEl.dataset.status = row.status;
       const badge = cardEl.querySelector('[data-role="status-badge"]');
@@ -232,6 +387,16 @@
       badge.textContent = titleCase(row.status);
       cardEl.querySelector('[data-role="actions"]').innerHTML = renderActions(row.status);
       cardEl.querySelector('.wd-reject-panel').hidden = true;
+      cardEl.querySelector('.wd-pay-panel').hidden = true;
+
+      const proofSlot = cardEl.querySelector('[data-role="paid-proof"]');
+      if (row.status === 'paid') {
+        proofSlot.innerHTML = renderPaidProof(row);
+        proofSlot.hidden = false;
+      } else {
+        proofSlot.innerHTML = '';
+        proofSlot.hidden = true;
+      }
       lucide.createIcons();
     }
 
@@ -261,15 +426,22 @@
     }
 
     listEl.addEventListener('click', async (e) => {
-      const btn = e.target.closest('button[data-action]');
+      const btn = e.target.closest('[data-action]');
       if (!btn) return;
       const cardEl = btn.closest('.wd-case');
       const id = cardEl.dataset.id;
       const action = btn.dataset.action;
       const panel = cardEl.querySelector('.wd-reject-panel');
+      const payPanel = cardEl.querySelector('.wd-pay-panel');
+
+      if (action === 'view-proof') {
+        openLightbox(btn.dataset.url);
+        return;
+      }
 
       if (action === 'reject-toggle') {
         panel.hidden = !panel.hidden;
+        payPanel.hidden = true;
         return;
       }
       if (action === 'reject-cancel') {
@@ -277,14 +449,76 @@
         return;
       }
 
-      if (action === 'approve' || action === 'pay') {
-        const path = action === 'approve' ? `/api/wallet/withdrawals/${id}/approve` : `/api/wallet/withdrawals/${id}/pay`;
+      if (action === 'pay-toggle') {
+        payPanel.hidden = !payPanel.hidden;
+        panel.hidden = true;
+        return;
+      }
+      if (action === 'pay-cancel') {
+        payPanel.hidden = true;
+        setCardProofFile(cardEl, null);
+        cardEl.querySelector('.wd-pay-ref').value = '';
+        return;
+      }
+      if (action === 'pay-pick') {
+        cardEl.querySelector('.wd-pay-file').click();
+        return;
+      }
+      if (action === 'pay-clear-file') {
+        setCardProofFile(cardEl, null);
+        return;
+      }
+
+      if (action === 'approve') {
         setCardBusy(cardEl, true);
         try {
-          const res = await adminApiFetch(path, { method: 'POST' });
+          const res = await adminApiFetch(`/api/wallet/withdrawals/${id}/approve`, { method: 'POST' });
           const body = await res.json();
-          if (!res.ok) throw new Error(body.error || `Failed to ${action}`);
+          if (!res.ok) throw new Error(body.error || 'Failed to approve');
           applyStatus(cardEl, body);
+        } catch (err) {
+          showCardError(cardEl, err.message);
+        } finally {
+          setCardBusy(cardEl, false);
+        }
+        return;
+      }
+
+      if (action === 'pay-confirm') {
+        const file = cardEl.querySelector('.wd-pay-file').files[0];
+        const hint = cardEl.querySelector('.wd-pay-hint');
+        const showHint = (msg) => { hint.textContent = msg; hint.hidden = false; };
+        if (!file) { showHint('Attach the payment proof screenshot first.'); return; }
+        if (!/^image\/(png|jpe?g|webp)$/.test(file.type)) { showHint('Use a PNG, JPG or WebP image.'); return; }
+        if (file.size > MAX_PROOF_BYTES) { showHint('Image is over 10 MB — attach a smaller screenshot.'); return; }
+
+        const reference = cardEl.querySelector('.wd-pay-ref').value.trim();
+        setCardBusy(cardEl, true);
+        try {
+          // Same signed-upload-URL flow the rest of the platform uses (KYC docs,
+          // bank proofs, top-up screenshots): ask the API for a one-off upload
+          // URL, PUT the file straight to Supabase Storage, then confirm the
+          // path against the withdrawal.
+          const urlRes = await adminApiFetch(`/api/wallet/withdrawals/${id}/pay/upload-url`, {
+            method: 'POST',
+            body: JSON.stringify({ file_name: file.name })
+          });
+          const urlBody = await urlRes.json();
+          if (!urlRes.ok) throw new Error(urlBody.error || 'Could not start the upload');
+
+          const { error: upErr } = await supabaseClient.storage
+            .from(urlBody.bucket)
+            .uploadToSignedUrl(urlBody.storage_path, urlBody.token, file, { contentType: file.type });
+          if (upErr) throw new Error(upErr.message || 'Upload failed — try again');
+
+          const payRes = await adminApiFetch(`/api/wallet/withdrawals/${id}/pay`, {
+            method: 'POST',
+            body: JSON.stringify({ storage_path: urlBody.storage_path, reference })
+          });
+          const payBody = await payRes.json();
+          if (!payRes.ok) throw new Error(payBody.error || 'Failed to mark paid');
+          setCardProofFile(cardEl, null);
+          applyStatus(cardEl, payBody);
         } catch (err) {
           showCardError(cardEl, err.message);
         } finally {
@@ -311,6 +545,36 @@
         }
       }
     });
+
+    // Proof file picked through the native dialog.
+    listEl.addEventListener('change', (e) => {
+      const input = e.target.closest('.wd-pay-file');
+      if (input) refreshProofPreview(input.closest('.wd-case'));
+    });
+
+    // …or dropped onto the dashed zone.
+    listEl.addEventListener('dragover', (e) => {
+      const drop = e.target.closest('.wd-pay-drop');
+      if (!drop) return;
+      e.preventDefault();
+      drop.classList.add('dragover');
+    });
+    listEl.addEventListener('dragleave', (e) => {
+      const drop = e.target.closest('.wd-pay-drop');
+      if (drop) drop.classList.remove('dragover');
+    });
+    listEl.addEventListener('drop', (e) => {
+      const drop = e.target.closest('.wd-pay-drop');
+      if (!drop) return;
+      e.preventDefault();
+      drop.classList.remove('dragover');
+      const file = e.dataTransfer.files[0];
+      if (file) setCardProofFile(drop.closest('.wd-case'), file);
+    });
+
+    document.getElementById('proofLightboxClose').addEventListener('click', closeLightbox);
+    lightboxEl.addEventListener('click', (e) => { if (e.target === lightboxEl) closeLightbox(); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !lightboxEl.hidden) closeLightbox(); });
 
     (async function init() {
       const session = await requireStaffSession();
