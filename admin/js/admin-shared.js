@@ -48,6 +48,23 @@ async function adminSignOut() {
   window.location.href = '/admin/login/';
 }
 
+// The API always answers with JSON. When it doesn't — a Render cold-start or
+// 502 error page, or a 404 HTML page because an endpoint isn't deployed yet —
+// res.json() throws an opaque `Unexpected token '<', "<!DOCTYPE "...`. Read
+// the body once as text and turn a non-JSON response into an actionable
+// message instead. Returns the parsed body on success (any status).
+async function readApiJson(res) {
+  const text = await res.text();
+  try {
+    return JSON.parse(text);
+  } catch {
+    if (!res.ok) {
+      throw new Error(`API request failed (${res.status}). This endpoint may not be deployed yet.`);
+    }
+    throw new Error(`The API returned an unexpected non-JSON response: ${text.trim().slice(0, 120)}`);
+  }
+}
+
 // Fills in the signed-in staff email and wires the Sign Out button. Every
 // /admin/ page (except login) calls this once its nav markup is in the DOM.
 // Deliberately doesn't touch the mobile burger menu — each page wires that

@@ -408,7 +408,7 @@
       try {
         const res = await adminApiFetch('/api/wallet/withdrawals/pending');
         if (res.status === 403) throw new Error(NO_STAFF_ROLE_MESSAGE);
-        const body = await res.json();
+        const body = await readApiJson(res);
         if (!res.ok) throw new Error(body.error || `Request failed (${res.status})`);
 
         loadingEl.hidden = true;
@@ -473,7 +473,7 @@
         setCardBusy(cardEl, true);
         try {
           const res = await adminApiFetch(`/api/wallet/withdrawals/${id}/approve`, { method: 'POST' });
-          const body = await res.json();
+          const body = await readApiJson(res);
           if (!res.ok) throw new Error(body.error || 'Failed to approve');
           applyStatus(cardEl, body);
         } catch (err) {
@@ -503,7 +503,7 @@
             method: 'POST',
             body: JSON.stringify({ file_name: file.name })
           });
-          const urlBody = await urlRes.json();
+          const urlBody = await readApiJson(urlRes);
           if (!urlRes.ok) throw new Error(urlBody.error || 'Could not start the upload');
 
           const { error: upErr } = await supabaseClient.storage
@@ -515,7 +515,7 @@
             method: 'POST',
             body: JSON.stringify({ storage_path: urlBody.storage_path, reference })
           });
-          const payBody = await payRes.json();
+          const payBody = await readApiJson(payRes);
           if (!payRes.ok) throw new Error(payBody.error || 'Failed to mark paid');
           setCardProofFile(cardEl, null);
           applyStatus(cardEl, payBody);
@@ -535,7 +535,7 @@
             method: 'POST',
             body: JSON.stringify({ reason })
           });
-          const body = await res.json();
+          const body = await readApiJson(res);
           if (!res.ok) throw new Error(body.error || 'Failed to reject');
           applyStatus(cardEl, body);
         } catch (err) {
