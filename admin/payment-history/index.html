@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Payment History — LOAD24 Admin</title>
+  <meta name="robots" content="noindex, nofollow" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  <link rel="stylesheet" href="../../css/app-theme.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="../js/admin-shared.js"></script>
+  <style>
+    /* 12 nav links don't fit a single row below ~1600px; scroll instead of
+       wrapping, since the fixed-height bar clips a wrapped second row. */
+    .app-nav-links { flex: 1 1 auto; min-width: 0; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: thin; gap: 4px; }
+    .app-nav-links::-webkit-scrollbar { height: 4px; }
+    .app-nav-links::-webkit-scrollbar-thumb { background: rgba(255,255,255,.25); border-radius: 4px; }
+    .app-nav-links a { flex: 0 0 auto; }
+    .app-logo, .app-nav-actions { flex: 0 0 auto; }
+    @media (max-width: 480px) {
+      .app-logo span:last-child { display: none; }
+      #staffEmail { display: none; }
+      #signOutBtn { padding: 8px 10px; }
+    }
+
+    .admin-wrap { max-width: 1240px; margin: 0 auto; padding: 48px 20px 80px; }
+    .admin-wrap h1 { font-size: 26px; margin: 0 0 8px; }
+    .admin-wrap p.sub { color: var(--slate); font-size: 14.5px; margin: 0 0 24px; }
+
+    .admin-error {
+      background: #fee2e2; color: #b91c1c; font-size: 13.5px; font-weight: 600;
+      padding: 14px 16px; border-radius: 12px; margin-bottom: 20px; line-height: 1.5;
+    }
+    .admin-loading, .admin-empty {
+      text-align: center; color: var(--slate); font-size: 14px; padding: 60px 20px;
+      background: var(--slate-50); border-radius: var(--radius-md);
+    }
+
+    .ph-filters {
+      display: flex; align-items: flex-end; gap: 12px; flex-wrap: wrap; margin-bottom: 20px;
+      background: var(--white); border: 1px solid var(--slate-200); border-radius: var(--radius-md);
+      box-shadow: var(--shadow-soft); padding: 18px 20px;
+    }
+    .ph-filters .field { margin-bottom: 0; min-width: 150px; }
+    .ph-filters .field.grow { flex: 1; min-width: 220px; }
+    .ph-filters label { display: block; font-size: 12px; font-weight: 700; color: var(--slate); margin-bottom: 5px; }
+    .ph-filters input, .ph-filters select {
+      width: 100%; font-family: inherit; font-size: 13.5px; padding: 9px 12px;
+      border: 1.5px solid var(--slate-200); border-radius: 10px; outline: none; background: #fff; color: var(--ink);
+    }
+    .ph-filters input:focus, .ph-filters select:focus { border-color: var(--brand); }
+    .ph-filters .actions { display: flex; gap: 8px; }
+
+    .ph-table-wrap { overflow-x: auto; background: var(--white); border: 1px solid var(--slate-200); border-radius: var(--radius-md); box-shadow: var(--shadow-soft); }
+    table.ph-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+    table.ph-table th {
+      text-align: left; background: var(--slate-50); color: var(--ink); font-weight: 700;
+      padding: 12px 14px; border-bottom: 2px solid var(--slate-200); white-space: nowrap;
+    }
+    table.ph-table td { padding: 12px 14px; border-bottom: 1px solid var(--slate-200); color: var(--slate); vertical-align: top; white-space: nowrap; }
+    table.ph-table tr:last-child > td { border-bottom: none; }
+    table.ph-table td.strong { color: var(--ink); font-weight: 600; }
+    table.ph-table td.wrap-cell { white-space: normal; }
+    .ph-txn { font-family: 'SFMono-Regular', Consolas, monospace; font-size: 12px; color: var(--slate-light); }
+    .ph-user .id { color: var(--slate-light); font-size: 11px; font-family: monospace; }
+    .ph-amount { font-weight: 800; font-family: 'Poppins', sans-serif; }
+    .ph-amount.credit { color: #15803d; }
+    .ph-amount.debit { color: #b91c1c; }
+    .ph-notes { max-width: 280px; }
+
+    .ph-pagination { display: flex; align-items: center; justify-content: center; gap: 14px; margin-top: 18px; font-size: 13.5px; color: var(--slate); }
+  </style>
+</head>
+
+<body class="app-theme">
+  <header class="app-nav" id="siteNav">
+    <div class="wrap app-nav-inner">
+      <a href="/admin/" class="app-logo">
+        <i data-lucide="shield-check" style="width:20px;height:20px;color:#f97316;"></i>LOAD<span>24</span>
+        <span style="color:#94a3b8;font-weight:600;font-size:13px;margin-left:4px;">Admin</span>
+      </a>
+      <nav class="app-nav-links">
+        <a href="/admin/">Dashboard</a>
+        <a href="/admin/kyc/">KYC Queue</a>
+        <a href="/admin/trucks/">Truck KYC</a>
+        <a href="/admin/bank-accounts/">Bank Accounts</a>
+        <a href="/admin/withdrawals/">Withdrawals</a>
+        <a href="/admin/wallet-topups/">Wallet Top-Ups</a>
+        <a href="/admin/payment-history/" class="active">Payment History</a>
+        <a href="/admin/moderation/">Moderation</a>
+        <a href="/admin/trips/">Trips</a>
+        <a href="/admin/notifications/">Notifications</a>
+        <a href="/admin/users/">Users</a>
+        <a href="/admin/support/">Support</a>
+        <a href="/admin/risk/">Risk</a>
+        <a href="/admin/content/">Content</a>
+        <a href="/admin/master-data/">Master Data</a>
+        <a href="/admin/bidding-charges/">Bidding Charges</a>
+        <a href="/admin/audit-log/">Audit Log</a>
+      </nav>
+      <div class="app-nav-actions">
+        <span id="staffEmail" style="color:#94a3b8;font-size:13px;"></span>
+        <button class="btn btn-ghost-white btn-sm" id="signOutBtn"><i data-lucide="log-out" style="width:15px;height:15px;"></i> Sign Out</button>
+        <button class="app-burger" id="burgerBtn" aria-label="Open menu"><i data-lucide="menu"></i></button>
+      </div>
+    </div>
+    <div class="app-mobile-menu" id="mobileMenu">
+      <a href="/admin/">Dashboard</a>
+      <a href="/admin/kyc/">KYC Queue</a>
+      <a href="/admin/trucks/">Truck KYC</a>
+      <a href="/admin/bank-accounts/">Bank Accounts</a>
+      <a href="/admin/withdrawals/">Withdrawals</a>
+      <a href="/admin/wallet-topups/">Wallet Top-Ups</a>
+      <a href="/admin/payment-history/">Payment History</a>
+      <a href="/admin/moderation/">Moderation</a>
+      <a href="/admin/trips/">Trips</a>
+      <a href="/admin/notifications/">Notifications</a>
+      <a href="/admin/users/">Users</a>
+      <a href="/admin/support/">Support</a>
+      <a href="/admin/risk/">Risk</a>
+      <a href="/admin/content/">Content</a>
+      <a href="/admin/master-data/">Master Data</a>
+      <a href="/admin/bidding-charges/">Bidding Charges</a>
+      <a href="/admin/audit-log/">Audit Log</a>
+    </div>
+  </header>
+
+  <main class="admin-wrap">
+    <h1>Payment History</h1>
+    <p class="sub">Every wallet transaction — top-ups, withdrawals, commissions, refunds, security holds — newest first.</p>
+
+    <div class="ph-filters">
+      <div class="field grow">
+        <label for="phSearch">Search</label>
+        <input type="text" id="phSearch" placeholder="Name, mobile, or transaction ID…" />
+      </div>
+      <div class="field">
+        <label for="phType">Type</label>
+        <select id="phType">
+          <option value="">All types</option>
+          <option value="add_money">Add Money</option>
+          <option value="withdrawal">Withdrawal</option>
+          <option value="credit">Credit</option>
+          <option value="debit">Debit</option>
+          <option value="refund">Refund</option>
+          <option value="commission">Commission</option>
+          <option value="service_charge">Service Charge</option>
+          <option value="security_hold">Security Hold</option>
+          <option value="security_release">Security Release</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="phStatus">Status</label>
+        <select id="phStatus">
+          <option value="">All statuses</option>
+          <option value="completed">Completed</option>
+          <option value="pending">Pending</option>
+          <option value="failed">Failed</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="phFrom">From</label>
+        <input type="date" id="phFrom" />
+      </div>
+      <div class="field">
+        <label for="phTo">To</label>
+        <input type="date" id="phTo" />
+      </div>
+      <div class="actions">
+        <button class="btn btn-brand btn-sm" id="phApplyBtn">Apply</button>
+        <button class="btn btn-outline-slate btn-sm" id="phClearBtn">Clear</button>
+      </div>
+    </div>
+
+    <div id="phError" class="admin-error" hidden></div>
+    <div id="phLoading" class="admin-loading">Loading…</div>
+    <div id="phEmpty" class="admin-empty" hidden>No matching transactions.</div>
+    <div id="phTableWrap" class="ph-table-wrap" hidden>
+      <table class="ph-table">
+        <thead><tr><th>Date</th><th>Transaction</th><th>User</th><th>Type</th><th>Status</th><th>Amount</th><th>Notes</th></tr></thead>
+        <tbody id="phTableBody"></tbody>
+      </table>
+    </div>
+    <div id="phPagination" class="ph-pagination" hidden></div>
+  </main>
+
+  <footer class="app-footer">
+    <div class="wrap">
+      <div class="foot-top">
+        <a href="/" class="app-logo"><i data-lucide="truck" style="width:20px;height:20px;color:#f97316;"></i>LOAD24.in</a>
+        <div class="badge badge-green">🟢 All India Services</div>
+      </div>
+      <p class="copyright">© 2026 LOAD24. All rights reserved.</p>
+      <div class="foot-links">
+        <a href="/delete-account/">Delete Account</a><span>|</span>
+        <a href="/PrivacyPolicy/">Privacy Policy</a><span>|</span>
+        <a href="/">Main Site</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Matches the wallet_transactions.type check constraint (migration 014)
+    // — which of these actually increase a wallet's balance, per the
+    // apply_wallet_transaction() trigger.
+    const CREDIT_TYPES = ['add_money', 'credit', 'refund', 'security_release'];
+    const STATUS_BADGE = { completed: 'badge-green', pending: 'badge-orange', failed: 'badge-red' };
+    const PAGE_SIZE = 20;
+    let currentPage = 1;
+
+    const searchInput = document.getElementById('phSearch');
+    const typeSelect = document.getElementById('phType');
+    const statusSelect = document.getElementById('phStatus');
+    const fromInput = document.getElementById('phFrom');
+    const toInput = document.getElementById('phTo');
+    const errorEl = document.getElementById('phError');
+    const loadingEl = document.getElementById('phLoading');
+    const emptyEl = document.getElementById('phEmpty');
+    const tableWrapEl = document.getElementById('phTableWrap');
+    const tableBodyEl = document.getElementById('phTableBody');
+    const paginationEl = document.getElementById('phPagination');
+
+    function renderRow(t) {
+      const profile = t.profile || {};
+      const isCredit = CREDIT_TYPES.includes(t.type);
+      return `
+        <tr>
+          <td class="strong">${formatDate(t.created_at)}</td>
+          <td class="ph-txn">${escapeHtml(t.transaction_id)}</td>
+          <td class="ph-user">
+            <div class="strong">${escapeHtml(profile.full_name || 'Unknown user')}</div>
+            <div class="id">${escapeHtml(profile.mobile || t.user_id)}</div>
+          </td>
+          <td>${escapeHtml(titleCase(t.type))}</td>
+          <td><span class="badge ${STATUS_BADGE[t.status] || 'badge-slate'}">${escapeHtml(titleCase(t.status))}</span></td>
+          <td class="ph-amount ${isCredit ? 'credit' : 'debit'}">${isCredit ? '+' : '−'}${formatInr(t.amount)}</td>
+          <td class="ph-notes wrap-cell">${escapeHtml(t.notes || '—')}</td>
+        </tr>`;
+    }
+
+    async function loadHistory() {
+      loadingEl.hidden = false;
+      errorEl.hidden = true;
+      emptyEl.hidden = true;
+      tableWrapEl.hidden = true;
+      paginationEl.hidden = true;
+
+      const params = new URLSearchParams({ page: String(currentPage), limit: String(PAGE_SIZE) });
+      if (searchInput.value.trim()) params.set('q', searchInput.value.trim());
+      if (typeSelect.value) params.set('type', typeSelect.value);
+      if (statusSelect.value) params.set('status', statusSelect.value);
+      // "To" is a plain date (no time) from the picker — treat it as
+      // inclusive through the end of that day rather than midnight at its
+      // start, which is what a bare gte/lte comparison against a date-only
+      // string would otherwise do.
+      if (fromInput.value) params.set('from', `${fromInput.value}T00:00:00.000Z`);
+      if (toInput.value) params.set('to', `${toInput.value}T23:59:59.999Z`);
+
+      try {
+        const res = await adminApiFetch(`/api/wallet/admin/transactions?${params.toString()}`);
+        if (res.status === 403) throw new Error(NO_STAFF_ROLE_MESSAGE);
+        const body = await readApiJson(res);
+        if (!res.ok) throw new Error(body.error || `Request failed (${res.status})`);
+
+        loadingEl.hidden = true;
+        const transactions = body.transactions || [];
+        if (!transactions.length) {
+          emptyEl.hidden = false;
+          return;
+        }
+
+        tableBodyEl.innerHTML = transactions.map(renderRow).join('');
+        tableWrapEl.hidden = false;
+
+        const totalPages = Math.max(1, Math.ceil((body.total || 0) / PAGE_SIZE));
+        paginationEl.hidden = false;
+        paginationEl.innerHTML = `
+          <button class="btn btn-outline-slate btn-sm" id="prevPageBtn" ${currentPage <= 1 ? 'disabled' : ''}>Previous</button>
+          <span>Page ${currentPage} of ${totalPages} (${body.total || 0} total)</span>
+          <button class="btn btn-outline-slate btn-sm" id="nextPageBtn" ${currentPage >= totalPages ? 'disabled' : ''}>Next</button>`;
+        document.getElementById('prevPageBtn').addEventListener('click', () => { currentPage--; loadHistory(); });
+        document.getElementById('nextPageBtn').addEventListener('click', () => { currentPage++; loadHistory(); });
+      } catch (err) {
+        loadingEl.hidden = true;
+        errorEl.textContent = err.message;
+        errorEl.hidden = false;
+      }
+    }
+
+    document.getElementById('phApplyBtn').addEventListener('click', () => { currentPage = 1; loadHistory(); });
+    document.getElementById('phClearBtn').addEventListener('click', () => {
+      searchInput.value = '';
+      typeSelect.value = '';
+      statusSelect.value = '';
+      fromInput.value = '';
+      toInput.value = '';
+      currentPage = 1;
+      loadHistory();
+    });
+    searchInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') document.getElementById('phApplyBtn').click();
+    });
+
+    (async function init() {
+      const session = await requireStaffSession();
+      if (!session) return; // already redirected to /admin/login/
+      await initAdminNav();
+      lucide.createIcons();
+      await loadHistory();
+    })();
+
+    const burgerBtn = document.getElementById('burgerBtn');
+    const mobileMenu = document.getElementById('mobileMenu');
+    burgerBtn.addEventListener('click', () => {
+      mobileMenu.classList.toggle('open');
+      burgerBtn.innerHTML = mobileMenu.classList.contains('open') ? '<i data-lucide="x"></i>' : '<i data-lucide="menu"></i>';
+      lucide.createIcons();
+    });
+  </script>
+</body>
+
+</html>

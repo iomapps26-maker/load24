@@ -62,7 +62,9 @@ body.app-theme {
   height: 64px;
 }
 
-.app-logo {
+/* `.app-theme a { color: inherit }` outranks a bare `.app-logo`, so the
+   wordmark needs the extra class to stay white on the dark nav/footer. */
+.app-theme .app-logo {
   display: flex;
   align-items: center;
   gap: 8px;
