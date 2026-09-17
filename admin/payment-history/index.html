@@ -76,6 +76,30 @@
     .ph-notes { max-width: 280px; }
 
     .ph-pagination { display: flex; align-items: center; justify-content: center; gap: 14px; margin-top: 18px; font-size: 13.5px; color: var(--slate); }
+
+    /* Payout proof thumbnail — withdrawal rows only, same screenshot the
+       Withdrawal Queue's Mark Paid panel attaches. */
+    .ph-proof-btn {
+      width: 40px; height: 40px; border-radius: 8px; border: 1.5px solid var(--slate-200);
+      overflow: hidden; padding: 0; cursor: zoom-in; background: var(--white); flex: 0 0 auto;
+    }
+    .ph-proof-btn img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .ph-proof-ref { font-size: 11px; color: var(--slate-light); margin-top: 3px; white-space: nowrap; }
+    .ph-proof-none { color: var(--slate-light); }
+
+    /* Screenshot lightbox — same pattern as Withdrawal Queue / Wallet Top-Ups */
+    .ph-lightbox {
+      position: fixed; inset: 0; background: rgba(15, 23, 42, .82);
+      display: flex; align-items: center; justify-content: center; padding: 32px; z-index: 999;
+    }
+    .ph-lightbox[hidden] { display: none; }
+    .ph-lightbox img { max-width: 100%; max-height: 100%; border-radius: 10px; box-shadow: 0 20px 60px rgba(0,0,0,.5); }
+    .ph-lightbox-close {
+      position: absolute; top: 20px; right: 24px; background: rgba(255,255,255,.12);
+      border: none; color: #fff; width: 40px; height: 40px; border-radius: 999px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .ph-lightbox-close:hover { background: rgba(255,255,255,.22); }
   </style>
 </head>
 
@@ -184,12 +208,17 @@
     <div id="phEmpty" class="admin-empty" hidden>No matching transactions.</div>
     <div id="phTableWrap" class="ph-table-wrap" hidden>
       <table class="ph-table">
-        <thead><tr><th>Date</th><th>Transaction</th><th>User</th><th>Type</th><th>Status</th><th>Amount</th><th>Notes</th></tr></thead>
+        <thead><tr><th>Date</th><th>Transaction</th><th>User</th><th>Type</th><th>Status</th><th>Amount</th><th>Proof</th><th>Notes</th></tr></thead>
         <tbody id="phTableBody"></tbody>
       </table>
     </div>
     <div id="phPagination" class="ph-pagination" hidden></div>
   </main>
+
+  <div class="ph-lightbox" id="proofLightbox" hidden>
+    <button class="ph-lightbox-close" id="proofLightboxClose" aria-label="Close"><i data-lucide="x"></i></button>
+    <img id="proofLightboxImg" src="" alt="Payment proof" />
+  </div>
 
   <footer class="app-footer">
     <div class="wrap">
@@ -226,6 +255,20 @@
     const tableWrapEl = document.getElementById('phTableWrap');
     const tableBodyEl = document.getElementById('phTableBody');
     const paginationEl = document.getElementById('phPagination');
+    const lightboxEl = document.getElementById('proofLightbox');
+    const lightboxImgEl = document.getElementById('proofLightboxImg');
+
+    function renderProofCell(t) {
+      if (t.type !== 'withdrawal') return '—';
+      if (!t.payment_proof_url) return '<span class="ph-proof-none">No proof</span>';
+      const shot = `
+        <button type="button" class="ph-proof-btn" data-action="view-proof" data-url="${escapeHtml(t.payment_proof_url)}">
+          <img src="${escapeHtml(t.payment_proof_url)}" alt="Payment proof" loading="lazy"
+               onerror="this.closest('.ph-proof-btn').outerHTML='<span class=&quot;ph-proof-none&quot;>Link expired — reload</span>';" />
+        </button>`;
+      const ref = t.payment_reference ? `<div class="ph-proof-ref">${escapeHtml(t.payment_reference)}</div>` : '';
+      return `${shot}${ref}`;
+    }
 
     function renderRow(t) {
       const profile = t.profile || {};
@@ -241,8 +284,20 @@
           <td>${escapeHtml(titleCase(t.type))}</td>
           <td><span class="badge ${STATUS_BADGE[t.status] || 'badge-slate'}">${escapeHtml(titleCase(t.status))}</span></td>
           <td class="ph-amount ${isCredit ? 'credit' : 'debit'}">${isCredit ? '+' : '−'}${formatInr(t.amount)}</td>
+          <td>${renderProofCell(t)}</td>
           <td class="ph-notes wrap-cell">${escapeHtml(t.notes || '—')}</td>
         </tr>`;
+    }
+
+    function openLightbox(url) {
+      lightboxImgEl.src = url;
+      lightboxEl.hidden = false;
+      lucide.createIcons();
+    }
+
+    function closeLightbox() {
+      lightboxEl.hidden = true;
+      lightboxImgEl.src = '';
     }
 
     async function loadHistory() {
@@ -307,6 +362,14 @@
     searchInput.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') document.getElementById('phApplyBtn').click();
     });
+
+    tableBodyEl.addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-action="view-proof"]');
+      if (btn) openLightbox(btn.dataset.url);
+    });
+    document.getElementById('proofLightboxClose').addEventListener('click', closeLightbox);
+    lightboxEl.addEventListener('click', (e) => { if (e.target === lightboxEl) closeLightbox(); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !lightboxEl.hidden) closeLightbox(); });
 
     (async function init() {
       const session = await requireStaffSession();
