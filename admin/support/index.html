@@ -69,7 +69,15 @@
     table.md-table td { padding: 12px 14px; border-bottom: 1px solid var(--slate-200); color: var(--slate); vertical-align: middle; white-space: nowrap; }
     table.md-table tr:last-child > td { border-bottom: none; }
     table.md-table td.strong { color: var(--ink); font-weight: 600; }
-    table.md-table td.mono { font-family: monospace; font-size: 12.5px; }
+    table.md-table .mono { font-family: monospace; font-size: 12.5px; }
+
+    .ref-code-wrap { display: flex; align-items: center; gap: 6px; }
+    .ref-copy-btn {
+      background: none; border: none; padding: 3px; margin: 0; cursor: pointer;
+      color: var(--slate-light); display: inline-flex; border-radius: 6px; flex: 0 0 auto;
+    }
+    .ref-copy-btn:hover { background: var(--slate-50); color: var(--ink); }
+    .ref-verified { font-size: 11px; color: var(--slate-light); margin-top: 2px; }
   </style>
 </head>
 
@@ -218,7 +226,7 @@
       <div id="slEmpty" class="admin-empty" hidden>No sales contacts yet — add one above.</div>
       <div id="slTableWrap" class="md-table-wrap" hidden>
         <table class="md-table">
-          <thead><tr><th>Name</th><th>Phone</th><th>Email</th><th>Assigned Users</th><th>Active</th><th></th></tr></thead>
+          <thead><tr><th>Name</th><th>Phone</th><th>Email</th><th>Assigned Users</th><th>Referral Code</th><th>Referrals</th><th>Active</th><th></th></tr></thead>
           <tbody id="slTableBody"></tbody>
         </table>
       </div>
@@ -245,7 +253,7 @@
     // factory instead of duplicating the editor/table wiring twice. `prefix`
     // picks the DOM ids (sc*/sl*), `apiPath` the admin endpoint
     // (admin/js/admin-shared.js's adminApiFetch/readApiJson).
-    function makeRoster(prefix, apiPath, noun) {
+    function makeRoster(prefix, apiPath, noun, opts = {}) {
       let editingId = null;
       let rowsData = [];
 
@@ -283,6 +291,23 @@
         els.editor.hidden = true;
       }
 
+      function renderReferralCols(row) {
+        const code = row.referral_code
+          ? `<div class="ref-code-wrap">
+              <span class="mono">${escapeHtml(row.referral_code)}</span>
+              <button type="button" class="ref-copy-btn" data-action="copy" data-code="${escapeHtml(row.referral_code)}" title="Copy referral code" aria-label="Copy referral code">
+                <i data-lucide="copy" style="width:13px;height:13px;"></i>
+              </button>
+            </div>`
+          : '—';
+        const total = Number(row.total_referred) || 0;
+        const verified = Number(row.verified_referred) || 0;
+        const referrals = total
+          ? `${total}<div class="ref-verified">${verified} verified</div>`
+          : '0';
+        return `<td>${code}</td><td>${referrals}</td>`;
+      }
+
       function renderRow(row) {
         return `
           <tr data-id="${escapeHtml(row.id)}">
@@ -290,6 +315,7 @@
             <td class="mono">${escapeHtml(row.phone)}</td>
             <td>${escapeHtml(row.email || '—')}</td>
             <td>${row.assigned_count ?? 0}</td>
+            ${opts.referrals ? renderReferralCols(row) : ''}
             <td>${row.is_active ? '<span class="badge badge-green">Active</span>' : '<span class="badge badge-slate">Inactive</span>'}</td>
             <td>
               <div style="display:flex;gap:6px;">
@@ -319,6 +345,7 @@
           }
           els.tableBody.innerHTML = body.map(renderRow).join('');
           els.tableWrap.hidden = false;
+          if (opts.referrals) lucide.createIcons();
         } catch (err) {
           els.loading.hidden = true;
           els.error.textContent = err.message;
@@ -359,8 +386,21 @@
       els.tableBody.addEventListener('click', async (e) => {
         const btn = e.target.closest('button[data-action]');
         if (!btn) return;
-        const id = btn.closest('tr').dataset.id;
         const action = btn.dataset.action;
+
+        if (action === 'copy') {
+          try {
+            await navigator.clipboard.writeText(btn.dataset.code);
+            const original = btn.title;
+            btn.title = 'Copied!';
+            setTimeout(() => { btn.title = original; }, 1500);
+          } catch {
+            alert('Could not copy — your browser blocked clipboard access.');
+          }
+          return;
+        }
+
+        const id = btn.closest('tr').dataset.id;
 
         if (action === 'edit') {
           openEditor(rowsData.find((r) => r.id === id));
@@ -387,7 +427,7 @@
     }
 
     const supportRoster = makeRoster('sc', '/api/admin/support-contacts', 'Support Contact');
-    const salesRoster = makeRoster('sl', '/api/admin/sales-contacts', 'Sales Contact');
+    const salesRoster = makeRoster('sl', '/api/admin/sales-contacts', 'Sales Contact', { referrals: true });
 
     (async function init() {
       const session = await requireStaffSession();
