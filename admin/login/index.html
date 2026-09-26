@@ -95,16 +95,16 @@
   <script>
     lucide.createIcons();
 
-    // Support executives (login-ID accounts) work from the Executive Desk,
-    // so land them there; admins and email-login staff get the dashboard.
-    function homeFor(user) {
-      return isStaffLoginId(user?.email) ? '/admin/executive/' : '/admin/';
+    // Executives (desk_executive role) have no admin-portal access, so land
+    // them on the Executive Desk; everyone else gets the dashboard.
+    async function homeFor(user) {
+      return (await isDeskOnlyUser(user.id)) ? '/executive/' : '/admin/';
     }
 
     // Already signed in (e.g. came back to this URL directly) — skip the form.
     (async function redirectIfSignedIn() {
       const { data: { session } } = await supabaseClient.auth.getSession();
-      if (session) window.location.href = homeFor(session.user);
+      if (session) window.location.href = await homeFor(session.user);
     })();
 
     const form = document.getElementById('loginForm');
@@ -136,7 +136,7 @@
         return;
       }
 
-      window.location.href = homeFor(data.user);
+      window.location.href = await homeFor(data.user);
     });
   </script>
 </body>

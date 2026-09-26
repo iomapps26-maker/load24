@@ -35,13 +35,33 @@ function isStaffLoginId(email) {
   return !!email && email.endsWith(`@${STAFF_LOGIN_DOMAIN}`);
 }
 
-// Redirects to /admin/login/ if there's no active session. Call at the top
-// of every /admin/ page except the login page itself. Returns the session
-// (with .access_token) so callers don't need a second getSession() round trip.
+// Where a signed-out user goes: the Executive Desk has its own sign-in page
+// (/executive/login/, login ID + password); every other admin page uses
+// /admin/login/.
+function staffLoginPage() {
+  return window.location.pathname.startsWith('/executive') ? '/executive/login/' : '/admin/login/';
+}
+
+// desk_executive (the role Staff Logins gives executives) can use only the
+// Executive Desk — the API refuses it everywhere under /api/admin/*. Reads
+// the signed-in user's own user_roles rows (RLS allows reading your own).
+async function isDeskOnlyUser(userId) {
+  const { data } = await supabaseClient.from('user_roles').select('role').eq('user_id', userId);
+  return !!data && data.length > 0 && data.every((r) => r.role === 'desk_executive');
+}
+
+// Redirects to the sign-in page if there's no active session, and sends
+// executives away from the admin portal to their desk. Call at the top of
+// every /admin/ page (and the desk) except the login pages. Returns the
+// session (with .access_token) so callers don't need a second getSession().
 async function requireStaffSession() {
   const { data: { session } } = await supabaseClient.auth.getSession();
   if (!session) {
-    window.location.href = '/admin/login/';
+    window.location.href = staffLoginPage();
+    return null;
+  }
+  if (window.location.pathname.startsWith('/admin') && (await isDeskOnlyUser(session.user.id))) {
+    window.location.href = '/executive/';
     return null;
   }
   return session;
@@ -53,7 +73,7 @@ async function requireStaffSession() {
 async function adminApiFetch(path, options = {}) {
   const { data: { session } } = await supabaseClient.auth.getSession();
   if (!session) {
-    window.location.href = '/admin/login/';
+    window.location.href = staffLoginPage();
     throw new Error('No active session');
   }
   return fetch(`${API_BASE}${path}`, {
@@ -68,7 +88,7 @@ async function adminApiFetch(path, options = {}) {
 
 async function adminSignOut() {
   await supabaseClient.auth.signOut();
-  window.location.href = '/admin/login/';
+  window.location.href = staffLoginPage();
 }
 
 // The API always answers with JSON. When it doesn't — a Render cold-start or

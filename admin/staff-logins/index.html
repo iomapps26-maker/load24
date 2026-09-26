@@ -103,7 +103,7 @@
         <a href="/admin/notifications/">Notifications</a>
         <a href="/admin/users/">Users</a>
         <a href="/admin/support/">Support</a>
-        <a href="/admin/executive/">Executive Desk</a>
+        <a href="/executive/">Executive Desk</a>
         <a href="/admin/staff-logins/" class="active">Staff Logins</a>
         <a href="/admin/risk/">Risk</a>
         <a href="/admin/content/">Content</a>
@@ -130,7 +130,7 @@
       <a href="/admin/notifications/">Notifications</a>
       <a href="/admin/users/">Users</a>
       <a href="/admin/support/">Support</a>
-      <a href="/admin/executive/">Executive Desk</a>
+      <a href="/executive/">Executive Desk</a>
       <a href="/admin/staff-logins/">Staff Logins</a>
       <a href="/admin/risk/">Risk</a>
       <a href="/admin/content/">Content</a>
@@ -142,7 +142,7 @@
 
   <main class="admin-wrap">
     <h1>Staff Logins</h1>
-    <p class="sub">Give each support executive their own login ID and password for the <a href="/admin/executive/">Executive Desk</a>, so every action they take is recorded under their name in the <a href="/admin/audit-log/">Audit Log</a>. Only admins can manage logins.</p>
+    <p class="sub">Give each support executive their own login ID and password for the <a href="/executive/">Executive Desk</a>, so every action they take is recorded under their name in the <a href="/admin/audit-log/">Audit Log</a>. Only admins can manage logins.</p>
 
     <div class="md-toolbar">
       <div class="field" style="margin:0;flex:0 1 300px;"><input type="search" id="searchInput" placeholder="Search name, login ID or mobile" aria-label="Search staff logins" /></div>
@@ -410,7 +410,7 @@
     // ── Credentials hand-off ────────────────────────────────────────────
     function showCredentials(title, account, password) {
       $('credsTitle').textContent = title;
-      $('credsUrl').textContent = `${location.origin}/admin/login/`;
+      $('credsUrl').textContent = `${location.origin}/executive/login/`;
       $('credsName').textContent = account.full_name || '—';
       $('credsLoginId').textContent = account.login_id;
       $('credsPassword').textContent = password;

@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Executive Sign In — LOAD24</title>
+  <meta name="robots" content="noindex, nofollow" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  <link rel="stylesheet" href="../../css/app-theme.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="../../admin/js/admin-shared.js"></script>
+  <style>
+    body.exec-login-body {
+      min-height: 100vh;
+      background: var(--navy);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 16px;
+    }
+
+    .exec-login-card {
+      width: 100%;
+      max-width: 400px;
+      background: var(--white);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-lift);
+      padding: 36px 32px;
+    }
+
+    @media (max-width: 420px) {
+      .exec-login-card { padding: 28px 20px; }
+    }
+
+    .exec-login-logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: 'Poppins', sans-serif;
+      font-weight: 800;
+      font-size: 20px;
+      color: var(--ink);
+      margin-bottom: 18px;
+    }
+
+    .exec-login-logo span { color: var(--brand); }
+
+    .exec-login-card h1 { font-size: 21px; margin: 0 0 6px; }
+    .exec-login-card p.sub { color: var(--slate); font-size: 13.5px; margin: 0 0 24px; }
+
+    .exec-error,
+    .exec-status {
+      font-size: 13px;
+      font-weight: 600;
+      padding: 10px 14px;
+      border-radius: 10px;
+      margin-bottom: 16px;
+    }
+
+    .exec-error { background: #fee2e2; color: #b91c1c; }
+    .exec-status { background: #fff7ed; color: #c2410c; }
+
+    .password-wrap { position: relative; }
+    .password-wrap input { padding-right: 44px; }
+    .password-toggle {
+      position: absolute;
+      right: 6px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: 0;
+      padding: 6px;
+      cursor: pointer;
+      color: var(--slate);
+      display: flex;
+    }
+
+    .exec-login-footnote { text-align: center; margin-top: 18px; font-size: 12px; color: var(--slate); }
+    .exec-login-footnote a { color: var(--brand); font-weight: 600; }
+  </style>
+</head>
+
+<body class="app-theme exec-login-body">
+  <div class="exec-login-card">
+    <div class="exec-login-logo"><i data-lucide="truck" style="width:22px;height:22px;color:#f97316;"></i>LOAD<span>24</span></div>
+    <div class="eyebrow-pill" style="margin-bottom:14px;"><i data-lucide="headset" style="width:13px;height:13px;"></i> Executive Desk</div>
+    <h1>Executive Sign In</h1>
+    <p class="sub">Sign in with the login ID and password your admin gave you (e.g. <strong>ravi.k</strong>).</p>
+
+    <div id="loginError" class="exec-error" hidden></div>
+    <div id="loginStatus" class="exec-status" hidden></div>
+
+    <form id="loginForm">
+      <div class="field">
+        <label for="loginId">Login ID</label>
+        <input type="text" id="loginId" name="username" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" required />
+      </div>
+      <div class="field">
+        <label for="password">Password</label>
+        <div class="password-wrap">
+          <input type="password" id="password" name="password" autocomplete="current-password" required />
+          <button type="button" class="password-toggle" id="passwordToggle" aria-label="Show password"><i data-lucide="eye" style="width:18px;height:18px;"></i></button>
+        </div>
+      </div>
+      <button type="submit" class="btn btn-brand btn-block" id="loginBtn">
+        <i data-lucide="log-in" style="width:16px;height:16px;"></i> Sign In
+      </button>
+    </form>
+
+    <div class="exec-login-footnote">Forgot your password? Ask your admin to reset it. &middot; <a href="/">LOAD24.in</a></div>
+  </div>
+
+  <script>
+    lucide.createIcons();
+
+    const DESK_URL = '/executive/';
+    const form = document.getElementById('loginForm');
+    const errorBox = document.getElementById('loginError');
+    const statusBox = document.getElementById('loginStatus');
+    const loginBtn = document.getElementById('loginBtn');
+    const SIGN_IN_HTML = loginBtn.innerHTML;
+
+    function showError(message) {
+      statusBox.hidden = true;
+      errorBox.textContent = message;
+      errorBox.hidden = false;
+    }
+
+    function showStatus(message) {
+      errorBox.hidden = true;
+      statusBox.textContent = message;
+      statusBox.hidden = false;
+    }
+
+    function resetButton() {
+      loginBtn.disabled = false;
+      loginBtn.innerHTML = SIGN_IN_HTML;
+      lucide.createIcons();
+    }
+
+    document.getElementById('passwordToggle').addEventListener('click', (e) => {
+      const input = document.getElementById('password');
+      const showing = input.type === 'text';
+      input.type = showing ? 'password' : 'text';
+      e.currentTarget.setAttribute('aria-label', showing ? 'Show password' : 'Hide password');
+      e.currentTarget.innerHTML = `<i data-lucide="${showing ? 'eye' : 'eye-off'}" style="width:18px;height:18px;"></i>`;
+      lucide.createIcons();
+    });
+
+    // A correct password only proves the Supabase login works. Before
+    // opening the desk, confirm the API also lets this account in — it
+    // needs the desk_executive role, or admin / support_executive /
+    // support_manager (EXECUTIVE_DESK_ROLES in the backend). my-activity is the cheapest
+    // endpoint behind that check. Throws with a message fit to show.
+    async function confirmDeskAccess() {
+      const res = await adminApiFetch('/api/executive/my-activity');
+      if (res.ok) return;
+      const data = await readApiJson(res).catch(() => null);
+      if (res.status === 403) throw new Error('This login does not have access to the Executive Desk. Ask your admin to check your staff role.');
+      if (res.status === 401) throw new Error('Your session was not accepted. Please sign in again.');
+      throw new Error(data?.error || `Could not reach the LOAD24 server (${res.status}). Please try again in a minute.`);
+    }
+
+    async function verifyAndOpenDesk() {
+      showStatus('Signed in. Checking your Executive Desk access… (the server can take up to a minute to wake up)');
+      try {
+        await confirmDeskAccess();
+      } catch (err) {
+        await supabaseClient.auth.signOut();
+        showError(err.message || 'Could not confirm your access. Please try again.');
+        resetButton();
+        return;
+      }
+      showStatus('Access confirmed. Opening the Executive Desk…');
+      window.location.href = DESK_URL;
+    }
+
+    // Already signed in (e.g. came back to this URL) — confirm and go.
+    (async function redirectIfSignedIn() {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session) return;
+      loginBtn.disabled = true;
+      loginBtn.textContent = 'Checking…';
+      verifyAndOpenDesk();
+    })();
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      errorBox.hidden = true;
+      statusBox.hidden = true;
+      loginBtn.disabled = true;
+      loginBtn.textContent = 'Signing in…';
+
+      const email = staffLoginEmail(document.getElementById('loginId').value);
+      const password = document.getElementById('password').value;
+
+      const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+
+      if (error) {
+        // A disabled login (admin/staff-logins/) is a Supabase ban.
+        showError(/banned/i.test(error.message || '')
+          ? 'This login has been disabled. Contact your admin.'
+          : /invalid login credentials/i.test(error.message || '')
+            ? 'Wrong login ID or password'
+            : error.message || 'Sign in failed');
+        resetButton();
+        return;
+      }
+
+      loginBtn.textContent = 'Checking access…';
+      verifyAndOpenDesk();
+    });
+  </script>
+</body>
+
+</html>
