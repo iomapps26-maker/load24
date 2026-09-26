@@ -71,14 +71,14 @@
     <div class="admin-login-logo"><i data-lucide="truck" style="width:22px;height:22px;color:#f97316;"></i>LOAD<span>24</span></div>
     <div class="eyebrow-pill" style="margin-bottom:14px;"><i data-lucide="shield-check" style="width:13px;height:13px;"></i> Staff Portal</div>
     <h1>Admin Sign In</h1>
-    <p class="sub">Sign in with your LOAD24 staff account to review KYC submissions and withdrawal requests.</p>
+    <p class="sub">Sign in with the login ID your admin gave you (e.g. <strong>ravi.k</strong>), or your staff email.</p>
 
     <div id="loginError" class="admin-error" hidden></div>
 
     <form id="loginForm">
       <div class="field">
-        <label for="email">Email</label>
-        <input type="email" id="email" name="email" autocomplete="username" required />
+        <label for="loginId">Login ID or email</label>
+        <input type="text" id="loginId" name="username" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" required />
       </div>
       <div class="field">
         <label for="password">Password</label>
@@ -95,10 +95,16 @@
   <script>
     lucide.createIcons();
 
+    // Support executives (login-ID accounts) work from the Executive Desk,
+    // so land them there; admins and email-login staff get the dashboard.
+    function homeFor(user) {
+      return isStaffLoginId(user?.email) ? '/admin/executive/' : '/admin/';
+    }
+
     // Already signed in (e.g. came back to this URL directly) — skip the form.
     (async function redirectIfSignedIn() {
       const { data: { session } } = await supabaseClient.auth.getSession();
-      if (session) window.location.href = '/admin/';
+      if (session) window.location.href = homeFor(session.user);
     })();
 
     const form = document.getElementById('loginForm');
@@ -111,13 +117,18 @@
       loginBtn.disabled = true;
       loginBtn.textContent = 'Signing in…';
 
-      const email = document.getElementById('email').value.trim();
+      const email = staffLoginEmail(document.getElementById('loginId').value);
       const password = document.getElementById('password').value;
 
-      const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+      const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
 
       if (error) {
-        errorBox.textContent = error.message || 'Sign in failed';
+        // A disabled login (admin/staff-logins/) is a Supabase ban.
+        errorBox.textContent = /banned/i.test(error.message || '')
+          ? 'This login has been disabled. Contact your admin.'
+          : /invalid login credentials/i.test(error.message || '')
+            ? 'Wrong login ID or password'
+            : error.message || 'Sign in failed';
         errorBox.hidden = false;
         loginBtn.disabled = false;
         loginBtn.innerHTML = '<i data-lucide="log-in" style="width:16px;height:16px;"></i> Sign In';
@@ -125,7 +136,7 @@
         return;
       }
 
-      window.location.href = '/admin/';
+      window.location.href = homeFor(data.user);
     });
   </script>
 </body>

@@ -12,6 +12,29 @@ const API_BASE = 'https://load24-app.onrender.com';
 
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+// Support executives get a personal login ID (e.g. "ravi.k") from an admin
+// on /admin/staff-logins/. Supabase auth is email-based, so the API stores it
+// as ravi.k@staff.load24.internal — must match STAFF_LOGIN_DOMAIN in the
+// backend's routes/admin/staffAccounts.js. Executives never see the domain.
+const STAFF_LOGIN_DOMAIN = 'staff.load24.internal';
+
+// What the login form sends to Supabase: a bare ID gets the staff domain,
+// anything with an "@" is used as-is (admins still sign in by email).
+function staffLoginEmail(loginIdOrEmail) {
+  const value = String(loginIdOrEmail || '').trim().toLowerCase();
+  return value.includes('@') ? value : `${value}@${STAFF_LOGIN_DOMAIN}`;
+}
+
+// The reverse, for display: ravi.k@staff.load24.internal -> "ravi.k".
+function staffLoginLabel(email) {
+  const suffix = `@${STAFF_LOGIN_DOMAIN}`;
+  return email && email.endsWith(suffix) ? email.slice(0, -suffix.length) : email;
+}
+
+function isStaffLoginId(email) {
+  return !!email && email.endsWith(`@${STAFF_LOGIN_DOMAIN}`);
+}
+
 // Redirects to /admin/login/ if there's no active session. Call at the top
 // of every /admin/ page except the login page itself. Returns the session
 // (with .access_token) so callers don't need a second getSession() round trip.
@@ -65,14 +88,14 @@ async function readApiJson(res) {
   }
 }
 
-// Fills in the signed-in staff email and wires the Sign Out button. Every
+// Fills in the signed-in staff email (or login ID) and wires the Sign Out button. Every
 // /admin/ page (except login) calls this once its nav markup is in the DOM.
 // Deliberately doesn't touch the mobile burger menu — each page wires that
 // up itself, same as the rest of the site.
 async function initAdminNav() {
   const { data: { session } } = await supabaseClient.auth.getSession();
   const emailEl = document.getElementById('staffEmail');
-  if (emailEl && session) emailEl.textContent = session.user.email;
+  if (emailEl && session) emailEl.textContent = staffLoginLabel(session.user.email);
 
   const signOutBtn = document.getElementById('signOutBtn');
   if (signOutBtn) signOutBtn.addEventListener('click', adminSignOut);

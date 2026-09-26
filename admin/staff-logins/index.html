@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Staff Logins — LOAD24 Admin</title>
+  <meta name="robots" content="noindex, nofollow" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  <link rel="stylesheet" href="../../css/app-theme.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="../js/admin-shared.js"></script>
+  <style>
+    /* 17 nav links don't fit a single row below ~1600px; scroll instead of
+       wrapping, since the fixed-height bar clips a wrapped second row. */
+    .app-nav-links { flex: 1 1 auto; min-width: 0; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: thin; gap: 4px; }
+    .app-nav-links::-webkit-scrollbar { height: 4px; }
+    .app-nav-links::-webkit-scrollbar-thumb { background: rgba(255,255,255,.25); border-radius: 4px; }
+    .app-nav-links a { flex: 0 0 auto; }
+    .app-logo, .app-nav-actions { flex: 0 0 auto; }
+    @media (max-width: 480px) {
+      .app-logo span:last-child { display: none; }
+      #staffEmail { display: none; }
+      #signOutBtn { padding: 8px 10px; }
+    }
+
+    .admin-wrap { max-width: 1080px; margin: 0 auto; padding: 48px 20px 80px; }
+    .admin-wrap h1 { font-size: 26px; margin: 0 0 8px; }
+    .admin-wrap p.sub { color: var(--slate); font-size: 14.5px; margin: 0 0 24px; }
+
+    .admin-error {
+      background: #fee2e2; color: #b91c1c; font-size: 13.5px; font-weight: 600;
+      padding: 14px 16px; border-radius: 12px; margin-bottom: 20px; line-height: 1.5;
+    }
+    .admin-loading, .admin-empty {
+      text-align: center; color: var(--slate); font-size: 14px; padding: 60px 20px;
+      background: var(--slate-50); border-radius: var(--radius-md);
+    }
+
+    .md-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+
+    .md-editor {
+      background: var(--white); border: 1px solid var(--slate-200); border-radius: var(--radius-md);
+      box-shadow: var(--shadow-soft); padding: 22px; margin-bottom: 20px;
+    }
+    .md-editor h3 { font-size: 16px; margin: 0 0 6px; }
+    .md-editor p.hint { color: var(--slate); font-size: 13px; margin: 0 0 16px; }
+    .md-editor .field-row { display: flex; gap: 14px; flex-wrap: wrap; }
+    .md-editor .field { margin-bottom: 14px; flex: 1; min-width: 180px; }
+    .md-editor .field small { display: block; color: var(--slate-light); font-size: 12px; margin-top: 4px; }
+    .md-editor .actions { display: flex; gap: 10px; margin-top: 4px; flex-wrap: wrap; }
+    .pw-wrap { display: flex; gap: 6px; }
+    .pw-wrap input { flex: 1; min-width: 0; font-family: monospace; }
+
+    .creds-box {
+      background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: var(--radius-md);
+      padding: 18px 20px; margin-bottom: 20px; color: #065f46; font-size: 13.5px;
+    }
+    .creds-box h3 { font-size: 15px; margin: 0 0 8px; color: #065f46; }
+    .creds-box dl { display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; margin: 10px 0 14px; }
+    .creds-box dt { font-weight: 700; }
+    .creds-box dd { margin: 0; font-family: monospace; font-size: 14px; color: var(--ink); word-break: break-all; }
+    .creds-box .actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+    .md-table-wrap { overflow-x: auto; background: var(--white); border: 1px solid var(--slate-200); border-radius: var(--radius-md); box-shadow: var(--shadow-soft); }
+    table.md-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+    table.md-table th {
+      text-align: left; background: var(--slate-50); color: var(--ink); font-weight: 700;
+      padding: 12px 14px; border-bottom: 2px solid var(--slate-200); white-space: nowrap;
+    }
+    table.md-table td { padding: 12px 14px; border-bottom: 1px solid var(--slate-200); color: var(--slate); vertical-align: middle; white-space: nowrap; }
+    table.md-table tr:last-child > td { border-bottom: none; }
+    table.md-table tr.is-disabled td { opacity: .6; }
+    table.md-table tr.is-disabled td:last-child { opacity: 1; }
+    table.md-table td.strong { color: var(--ink); font-weight: 600; }
+    table.md-table .mono { font-family: monospace; font-size: 12.5px; }
+  </style>
+</head>
+
+<body class="app-theme">
+  <header class="app-nav" id="siteNav">
+    <div class="wrap app-nav-inner">
+      <a href="/admin/" class="app-logo">
+        <i data-lucide="shield-check" style="width:20px;height:20px;color:#f97316;"></i>LOAD<span>24</span>
+        <span style="color:#94a3b8;font-weight:600;font-size:13px;margin-left:4px;">Admin</span>
+      </a>
+      <nav class="app-nav-links">
+        <a href="/admin/">Dashboard</a>
+        <a href="/admin/kyc/">KYC Queue</a>
+        <a href="/admin/trucks/">Truck KYC</a>
+        <a href="/admin/bank-accounts/">Bank Accounts</a>
+        <a href="/admin/withdrawals/">Withdrawals</a>
+        <a href="/admin/wallet-topups/">Wallet Top-Ups</a>
+        <a href="/admin/payment-history/">Payment History</a>
+        <a href="/admin/moderation/">Moderation</a>
+        <a href="/admin/trips/">Trips</a>
+        <a href="/admin/notifications/">Notifications</a>
+        <a href="/admin/users/">Users</a>
+        <a href="/admin/support/">Support</a>
+        <a href="/admin/executive/">Executive Desk</a>
+        <a href="/admin/staff-logins/" class="active">Staff Logins</a>
+        <a href="/admin/risk/">Risk</a>
+        <a href="/admin/content/">Content</a>
+        <a href="/admin/master-data/">Master Data</a>
+        <a href="/admin/bidding-charges/">Bidding Charges</a>
+        <a href="/admin/audit-log/">Audit Log</a>
+      </nav>
+      <div class="app-nav-actions">
+        <span id="staffEmail" style="color:#94a3b8;font-size:13px;"></span>
+        <button class="btn btn-ghost-white btn-sm" id="signOutBtn"><i data-lucide="log-out" style="width:15px;height:15px;"></i> Sign Out</button>
+        <button class="app-burger" id="burgerBtn" aria-label="Open menu"><i data-lucide="menu"></i></button>
+      </div>
+    </div>
+    <div class="app-mobile-menu" id="mobileMenu">
+      <a href="/admin/">Dashboard</a>
+      <a href="/admin/kyc/">KYC Queue</a>
+      <a href="/admin/trucks/">Truck KYC</a>
+      <a href="/admin/bank-accounts/">Bank Accounts</a>
+      <a href="/admin/withdrawals/">Withdrawals</a>
+      <a href="/admin/wallet-topups/">Wallet Top-Ups</a>
+      <a href="/admin/payment-history/">Payment History</a>
+      <a href="/admin/moderation/">Moderation</a>
+      <a href="/admin/trips/">Trips</a>
+      <a href="/admin/notifications/">Notifications</a>
+      <a href="/admin/users/">Users</a>
+      <a href="/admin/support/">Support</a>
+      <a href="/admin/executive/">Executive Desk</a>
+      <a href="/admin/staff-logins/">Staff Logins</a>
+      <a href="/admin/risk/">Risk</a>
+      <a href="/admin/content/">Content</a>
+      <a href="/admin/master-data/">Master Data</a>
+      <a href="/admin/bidding-charges/">Bidding Charges</a>
+      <a href="/admin/audit-log/">Audit Log</a>
+    </div>
+  </header>
+
+  <main class="admin-wrap">
+    <h1>Staff Logins</h1>
+    <p class="sub">Give each support executive their own login ID and password for the <a href="/admin/executive/">Executive Desk</a>, so every action they take is recorded under their name in the <a href="/admin/audit-log/">Audit Log</a>. Only admins can manage logins.</p>
+
+    <div class="md-toolbar">
+      <div class="field" style="margin:0;flex:0 1 300px;"><input type="search" id="searchInput" placeholder="Search name, login ID or mobile" aria-label="Search staff logins" /></div>
+      <button class="btn btn-brand btn-sm" id="newBtn"><i data-lucide="user-plus" style="width:14px;height:14px;"></i> New Executive Login</button>
+    </div>
+
+    <div class="creds-box" id="credsBox" hidden>
+      <h3 id="credsTitle">Login created</h3>
+      <div>Share these with the executive now — the password isn't shown again. They sign in at <strong id="credsUrl"></strong>.</div>
+      <dl>
+        <dt>Name</dt><dd id="credsName"></dd>
+        <dt>Login ID</dt><dd id="credsLoginId"></dd>
+        <dt>Password</dt><dd id="credsPassword"></dd>
+      </dl>
+      <div class="actions">
+        <button class="btn btn-brand btn-sm" id="credsCopyBtn"><i data-lucide="copy" style="width:14px;height:14px;"></i> Copy login details</button>
+        <button class="btn btn-outline-slate btn-sm" id="credsCloseBtn">Done</button>
+      </div>
+    </div>
+
+    <div class="md-editor" id="createEditor" hidden>
+      <h3>New Executive Login</h3>
+      <p class="hint">Creates a support executive account. They can use the Executive Desk and the staff pages, but can't create other logins.</p>
+      <div class="field-row">
+        <div class="field">
+          <label for="cName">Full name</label>
+          <input type="text" id="cName" placeholder="e.g. Ravi Kumar" autocomplete="off" />
+        </div>
+        <div class="field">
+          <label for="cLoginId">Login ID</label>
+          <input type="text" id="cLoginId" placeholder="e.g. ravi.k" autocomplete="off" autocapitalize="none" spellcheck="false" />
+          <small>3–40 characters: letters, numbers, dot, dash, underscore.</small>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label for="cMobile">Mobile (optional)</label>
+          <input type="tel" id="cMobile" placeholder="e.g. 9000000001" autocomplete="off" />
+        </div>
+        <div class="field">
+          <label for="cPassword">Password</label>
+          <div class="pw-wrap">
+            <input type="text" id="cPassword" autocomplete="new-password" spellcheck="false" />
+            <button type="button" class="btn btn-outline-slate btn-sm" id="cGenBtn" title="Generate a new password" aria-label="Generate a new password"><i data-lucide="refresh-cw" style="width:14px;height:14px;"></i></button>
+          </div>
+          <small>At least 8 characters. A random one is filled in — change it if you like.</small>
+        </div>
+      </div>
+      <div id="createError" class="admin-error" hidden></div>
+      <div class="actions">
+        <button class="btn btn-outline-slate btn-sm" id="createCancelBtn">Cancel</button>
+        <button class="btn btn-brand btn-sm" id="createSaveBtn">Create Login</button>
+      </div>
+    </div>
+
+    <div class="md-editor" id="resetEditor" hidden>
+      <h3 id="resetTitle">Reset password</h3>
+      <p class="hint">Sets a new password. The old one stops working for new sign-ins right away; a session that's already open can last up to an hour.</p>
+      <div class="field-row">
+        <div class="field">
+          <label for="rPassword">New password</label>
+          <div class="pw-wrap">
+            <input type="text" id="rPassword" autocomplete="new-password" spellcheck="false" />
+            <button type="button" class="btn btn-outline-slate btn-sm" id="rGenBtn" title="Generate a new password" aria-label="Generate a new password"><i data-lucide="refresh-cw" style="width:14px;height:14px;"></i></button>
+          </div>
+          <small>At least 8 characters.</small>
+        </div>
+      </div>
+      <div id="resetError" class="admin-error" hidden></div>
+      <div class="actions">
+        <button class="btn btn-outline-slate btn-sm" id="resetCancelBtn">Cancel</button>
+        <button class="btn btn-brand btn-sm" id="resetSaveBtn">Set Password</button>
+      </div>
+    </div>
+
+    <div id="listError" class="admin-error" hidden></div>
+    <div id="listLoading" class="admin-loading">Loading…</div>
+    <div id="listEmpty" class="admin-empty" hidden>No executive logins yet — create one above.</div>
+    <div id="tableWrap" class="md-table-wrap" hidden>
+      <table class="md-table">
+        <thead><tr><th>Name</th><th>Login ID</th><th>Mobile</th><th>Status</th><th>Last Sign-In</th><th>Created</th><th></th></tr></thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+  </main>
+
+  <footer class="app-footer">
+    <div class="wrap">
+      <div class="foot-top">
+        <a href="/" class="app-logo"><i data-lucide="truck" style="width:20px;height:20px;color:#f97316;"></i>LOAD24.in</a>
+        <div class="badge badge-green">🟢 All India Services</div>
+      </div>
+      <p class="copyright">© 2026 LOAD24. All rights reserved.</p>
+      <div class="foot-links">
+        <a href="/delete-account/">Delete Account</a><span>|</span>
+        <a href="/PrivacyPolicy/">Privacy Policy</a><span>|</span>
+        <a href="/">Main Site</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Support executive logins — backend routes/admin/staffAccounts.js,
+    // mounted admin-only at /api/admin/staff-accounts. Login IDs map to
+    // <id>@staff.load24.internal (admin-shared.js's staffLoginEmail); the
+    // API returns login_id already stripped of that domain.
+    const API_PATH = '/api/admin/staff-accounts';
+    const MIN_PASSWORD_LENGTH = 8;
+    const ADMIN_ONLY_MESSAGE = 'Only admins can manage staff logins. Ask an admin to create or reset your login.';
+
+    let accounts = [];
+    let resettingId = null;
+
+    const $ = (id) => document.getElementById(id);
+
+    // No look-alike characters (0/O, 1/l/I) — these get read out over the
+    // phone or copied from a note.
+    function generatePassword(length = 10) {
+      const chars = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+      const bytes = crypto.getRandomValues(new Uint32Array(length));
+      return Array.from(bytes, (b) => chars[b % chars.length]).join('');
+    }
+
+    function showError(el, message) {
+      el.textContent = message;
+      el.hidden = false;
+    }
+
+    // Mirror the API's own checks so most mistakes are caught before a round trip.
+    function validPassword(pw) {
+      return pw.length >= MIN_PASSWORD_LENGTH;
+    }
+    function validLoginId(id) {
+      return id.includes('@') ? /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(id) : /^[a-z0-9._-]{3,40}$/.test(id);
+    }
+
+    async function apiCall(path, options) {
+      const res = await adminApiFetch(path, options);
+      if (res.status === 403) throw new Error(ADMIN_ONLY_MESSAGE);
+      const body = await readApiJson(res);
+      if (!res.ok) throw new Error(body.error || `Request failed (${res.status})`);
+      return body;
+    }
+
+    // ── List ────────────────────────────────────────────────────────────
+    function renderRow(a) {
+      const status = a.disabled
+        ? '<span class="badge badge-slate">Disabled</span>'
+        : '<span class="badge badge-green">Active</span>';
+      const toggle = a.disabled
+        ? '<button class="btn btn-outline-slate btn-sm" data-action="enable">Enable</button>'
+        : '<button class="btn btn-outline-slate btn-sm" style="color:#dc2626;border-color:#fecaca;" data-action="disable">Disable</button>';
+      return `
+        <tr data-id="${escapeHtml(a.user_id)}" class="${a.disabled ? 'is-disabled' : ''}">
+          <td class="strong">${escapeHtml(a.full_name || '—')}</td>
+          <td class="mono">${escapeHtml(a.login_id)}</td>
+          <td class="mono">${escapeHtml(a.mobile || '—')}</td>
+          <td>${status}</td>
+          <td>${a.last_sign_in_at ? formatDate(a.last_sign_in_at) : 'Never'}</td>
+          <td>${formatDate(a.created_at)}</td>
+          <td>
+            <div style="display:flex;gap:6px;">
+              <button class="btn btn-outline-slate btn-sm" data-action="reset">Reset Password</button>
+              ${toggle}
+            </div>
+          </td>
+        </tr>`;
+    }
+
+    function renderTable() {
+      const q = $('searchInput').value.trim().toLowerCase();
+      const rows = q
+        ? accounts.filter((a) => [a.full_name, a.login_id, a.mobile].some((v) => String(v || '').toLowerCase().includes(q)))
+        : accounts;
+
+      $('listEmpty').textContent = accounts.length ? 'No logins match your search.' : 'No executive logins yet — create one above.';
+      $('listEmpty').hidden = rows.length > 0;
+      $('tableWrap').hidden = rows.length === 0;
+      $('tableBody').innerHTML = rows.map(renderRow).join('');
+    }
+
+    async function loadAccounts() {
+      $('listLoading').hidden = false;
+      $('listError').hidden = true;
+      $('listEmpty').hidden = true;
+      $('tableWrap').hidden = true;
+      try {
+        const body = await apiCall(API_PATH);
+        accounts = body.accounts || [];
+        $('listLoading').hidden = true;
+        renderTable();
+      } catch (err) {
+        $('listLoading').hidden = true;
+        showError($('listError'), err.message);
+      }
+    }
+
+    function replaceAccount(updated) {
+      accounts = accounts.map((a) => (a.user_id === updated.user_id ? updated : a));
+      renderTable();
+    }
+
+    $('searchInput').addEventListener('input', renderTable);
+
+    // ── Create ──────────────────────────────────────────────────────────
+    let loginIdTouched = false;
+
+    function openCreate() {
+      closeReset();
+      closeCredentials();
+      ['cName', 'cLoginId', 'cMobile'].forEach((id) => { $(id).value = ''; });
+      loginIdTouched = false;
+      $('cPassword').value = generatePassword();
+      $('createError').hidden = true;
+      $('createEditor').hidden = false;
+      $('cName').focus();
+    }
+    function closeCreate() {
+      $('createEditor').hidden = true;
+    }
+
+    // Suggest a login ID from the name ("Ravi Kumar" -> "ravi.kumar") until
+    // the admin edits the ID field themselves.
+    $('cLoginId').addEventListener('input', () => { loginIdTouched = $('cLoginId').value !== ''; });
+    $('cName').addEventListener('input', () => {
+      if (loginIdTouched) return;
+      $('cLoginId').value = $('cName').value.trim().toLowerCase()
+        .replace(/[^a-z0-9]+/g, '.').replace(/^\.+|\.+$/g, '').slice(0, 40);
+    });
+
+    $('newBtn').addEventListener('click', openCreate);
+    $('createCancelBtn').addEventListener('click', closeCreate);
+    $('cGenBtn').addEventListener('click', () => { $('cPassword').value = generatePassword(); });
+
+    $('createSaveBtn').addEventListener('click', async () => {
+      const errEl = $('createError');
+      errEl.hidden = true;
+      const full_name = $('cName').value.trim();
+      const login_id = $('cLoginId').value.trim().toLowerCase();
+      const mobile = $('cMobile').value.trim();
+      const password = $('cPassword').value;
+
+      if (!full_name) return showError(errEl, 'Full name is required');
+      if (!validLoginId(login_id)) return showError(errEl, 'Login ID must be 3–40 characters (letters, numbers, . _ -) or a valid email');
+      if (!validPassword(password)) return showError(errEl, `Password must be at least ${MIN_PASSWORD_LENGTH} characters`);
+
+      const btn = $('createSaveBtn');
+      btn.disabled = true;
+      try {
+        const created = await apiCall(API_PATH, {
+          method: 'POST',
+          body: JSON.stringify({ full_name, login_id, mobile: mobile || null, password })
+        });
+        closeCreate();
+        accounts = [created, ...accounts];
+        renderTable();
+        showCredentials('Login created', created, password);
+      } catch (err) {
+        showError(errEl, err.message);
+      } finally {
+        btn.disabled = false;
+      }
+    });
+
+    // ── Credentials hand-off ────────────────────────────────────────────
+    function showCredentials(title, account, password) {
+      $('credsTitle').textContent = title;
+      $('credsUrl').textContent = `${location.origin}/admin/login/`;
+      $('credsName').textContent = account.full_name || '—';
+      $('credsLoginId').textContent = account.login_id;
+      $('credsPassword').textContent = password;
+      $('credsBox').hidden = false;
+      $('credsBox').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+    function closeCredentials() {
+      // Don't leave a password sitting on screen.
+      $('credsPassword').textContent = '';
+      $('credsBox').hidden = true;
+      $('credsCopyBtn').innerHTML = '<i data-lucide="copy" style="width:14px;height:14px;"></i> Copy login details';
+      lucide.createIcons();
+    }
+
+    $('credsCopyBtn').addEventListener('click', async () => {
+      const text = `LOAD24 staff login\nSign in at: ${$('credsUrl').textContent}\nLogin ID: ${$('credsLoginId').textContent}\nPassword: ${$('credsPassword').textContent}`;
+      try {
+        await navigator.clipboard.writeText(text);
+        $('credsCopyBtn').innerHTML = '<i data-lucide="check" style="width:14px;height:14px;"></i> Copied';
+        lucide.createIcons();
+      } catch {
+        alert('Could not copy — your browser blocked clipboard access. Select the details and copy them by hand.');
+      }
+    });
+    $('credsCloseBtn').addEventListener('click', closeCredentials);
+
+    // ── Reset password ──────────────────────────────────────────────────
+    function openReset(account) {
+      closeCreate();
+      closeCredentials();
+      resettingId = account.user_id;
+      $('resetTitle').textContent = `Reset password — ${account.full_name || account.login_id} (${account.login_id})`;
+      $('rPassword').value = generatePassword();
+      $('resetError').hidden = true;
+      $('resetEditor').hidden = false;
+      $('resetEditor').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+    function closeReset() {
+      resettingId = null;
+      $('resetEditor').hidden = true;
+    }
+
+    $('resetCancelBtn').addEventListener('click', closeReset);
+    $('rGenBtn').addEventListener('click', () => { $('rPassword').value = generatePassword(); });
+
+    $('resetSaveBtn').addEventListener('click', async () => {
+      const errEl = $('resetError');
+      errEl.hidden = true;
+      const password = $('rPassword').value;
+      if (!validPassword(password)) return showError(errEl, `Password must be at least ${MIN_PASSWORD_LENGTH} characters`);
+
+      const btn = $('resetSaveBtn');
+      btn.disabled = true;
+      try {
+        const updated = await apiCall(`${API_PATH}/${encodeURIComponent(resettingId)}/password`, {
+          method: 'POST',
+          body: JSON.stringify({ password })
+        });
+        closeReset();
+        replaceAccount(updated);
+        showCredentials('Password reset', updated, password);
+      } catch (err) {
+        showError(errEl, err.message);
+      } finally {
+        btn.disabled = false;
+      }
+    });
+
+    // ── Row actions ─────────────────────────────────────────────────────
+    $('tableBody').addEventListener('click', async (e) => {
+      const btn = e.target.closest('button[data-action]');
+      if (!btn) return;
+      const id = btn.closest('tr').dataset.id;
+      const account = accounts.find((a) => a.user_id === id);
+      if (!account) return;
+      const action = btn.dataset.action;
+
+      if (action === 'reset') {
+        openReset(account);
+        return;
+      }
+
+      if (action === 'disable' && !confirm(`Disable ${account.full_name || account.login_id}'s login? They won't be able to sign in until you enable it again. Their past actions stay in the audit log.`)) return;
+
+      btn.disabled = true;
+      try {
+        const updated = await apiCall(`${API_PATH}/${encodeURIComponent(id)}/${action}`, { method: 'POST' });
+        replaceAccount(updated);
+      } catch (err) {
+        btn.disabled = false;
+        alert(err.message);
+      }
+    });
+
+    (async function init() {
+      const session = await requireStaffSession();
+      if (!session) return; // already redirected to /admin/login/
+      await initAdminNav();
+      lucide.createIcons();
+      await loadAccounts();
+    })();
+
+    const burgerBtn = document.getElementById('burgerBtn');
+    const mobileMenu = document.getElementById('mobileMenu');
+    burgerBtn.addEventListener('click', () => {
+      mobileMenu.classList.toggle('open');
+      burgerBtn.innerHTML = mobileMenu.classList.contains('open') ? '<i data-lucide="x"></i>' : '<i data-lucide="menu"></i>';
+      lucide.createIcons();
+    });
+  </script>
+</body>
+
+</html>
