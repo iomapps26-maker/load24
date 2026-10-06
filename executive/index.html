@@ -155,6 +155,8 @@
     .trip-card h4 { margin: 0 0 6px; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--slate-light); }
     .trip-card .who { color: var(--ink); font-weight: 700; font-size: 15px; }
     .trip-card a { color: var(--brand); font-weight: 700; text-decoration: none; }
+    .doc-inputs { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+    .doc-inputs input[type=text], .doc-inputs input[type=tel] { padding: 7px 10px; border: 1.5px solid var(--slate-200); border-radius: 8px; font: inherit; font-size: 13px; width: 150px; }
 
     .desk-toast {
       position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 50;
@@ -323,8 +325,8 @@
     const WEEKDAYS = { mon: 'Mon', tue: 'Tue', wed: 'Wed', thu: 'Thu', fri: 'Fri', sat: 'Sat', sun: 'Sun' };
 
     // Storage buckets the matching upload-url endpoints mint signed URLs for
-    // (kyc.js, bankDetails.js, trucks.js) — those responses don't name it.
-    const BUCKETS = { kyc: 'kyc-documents', bank: 'bank-account-proofs', truck: 'truck-documents' };
+    // (kyc.js, bankDetails.js, trucks.js, loadBids.js) — those responses don't name it.
+    const BUCKETS = { kyc: 'kyc-documents', bank: 'bank-account-proofs', truck: 'truck-documents', trip: 'trip-documents' };
     const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
 
     const state = {
@@ -1560,24 +1562,85 @@
           ${pointCard('Drop', load, 'unloading')}
         </div>
         <div class="md-table-wrap">
-          <table class="md-table">
-            <thead><tr><th>Trip document</th><th>Number</th><th>File</th></tr></thead>
+          <table class="md-table" id="tripDocs">
+            <thead><tr><th>Trip document</th><th>Details</th><th>On file</th><th>Upload (photo or PDF)</th></tr></thead>
             <tbody>
               ${Object.entries(TRIP_DOC_LABELS).map(([type, label]) => {
                 const d = docs[type];
+                const details = type === 'eway_bill'
+                  ? `<form class="doc-inputs" data-doc-number>
+                      <input type="text" name="document_number" inputmode="numeric" maxlength="12" pattern="\\d{12}" title="12 digits" placeholder="12-digit number" value="${escAttr(d?.document_number || '')}" />
+                      <button type="submit" class="btn btn-outline-slate btn-sm">Save</button>
+                    </form>`
+                  : type === 'pod'
+                    ? `<form class="doc-inputs" data-delivery>
+                        <input type="text" name="delivery_person_name" maxlength="80" placeholder="Received by (name)" value="${escAttr(d?.delivery_person_name || '')}" />
+                        <input type="tel" name="delivery_person_contact" inputmode="numeric" maxlength="10" placeholder="Their mobile" value="${escAttr(d?.delivery_person_contact || '')}" />
+                        <button type="submit" class="btn btn-outline-slate btn-sm">Save</button>
+                      </form>`
+                    : '<span class="sub-line">—</span>';
                 return `
                 <tr>
-                  <td class="strong">${escapeHtml(label)}${type === 'pod' && d?.delivery_person_name ? `<div class="sub-line">Delivered to ${escapeHtml(d.delivery_person_name)}${d.delivery_person_contact ? ` · ${escapeHtml(d.delivery_person_contact)}` : ''}</div>` : ''}</td>
-                  <td class="mono">${escapeHtml(d?.document_number || '—')}</td>
+                  <td class="strong">${escapeHtml(label)}${d?.updated_at ? `<div class="sub-line">Updated ${escapeHtml(formatDate(d.updated_at))}</div>` : ''}</td>
+                  <td>${details}</td>
                   <td>${d?.url ? `<a href="${escAttr(d.url)}" target="_blank" rel="noopener" class="btn btn-outline-slate btn-sm">${icon('external-link')} View</a>` : '<span class="sub-line">Not uploaded yet</span>'}</td>
+                  <td><div class="upload-cell" data-doc-type="${type}"><input type="file" accept="image/*,application/pdf" /><button type="button" class="btn btn-outline-slate btn-sm" data-action="upload">${d?.has_file ? 'Replace' : 'Upload'}</button></div></td>
                 </tr>`;
               }).join('')}
             </tbody>
           </table>
         </div>
-        <p class="hint">Both parties now see this trip, and each other's contact details, in their app. E-Way Bill, Bilty and POD are uploaded from the app's Trip Details screen.</p>`;
+        <div class="admin-error form-error" hidden></div>
+        <p class="hint">Both parties see this trip, each other's contact details and these documents in their app's Trip Details screen. Ask the caller to WhatsApp photos of the papers, then upload them here.</p>`;
       lucide.createIcons();
       wireLoadViewNav(body);
+
+      // Trip paperwork, same endpoints the app's Trip Details screen uses —
+      // as the caller, so files land under their own storage folder.
+      const docsBase = `load-bids/load/${loadId}/documents`;
+      const errEl = body.querySelector('.form-error');
+      const save = async (btn, fn, message) => {
+        errEl.hidden = true;
+        const label = btn.innerHTML;
+        btn.disabled = true;
+        btn.textContent = 'Saving…';
+        try {
+          await fn();
+          await afterSave(message);
+        } catch (err) {
+          if (errEl.isConnected) { errEl.textContent = err.message; errEl.hidden = false; } else alert(err.message);
+          if (btn.isConnected) { btn.disabled = false; btn.innerHTML = label; }
+        }
+      };
+
+      body.querySelectorAll('[data-action="upload"]').forEach((btn) => btn.addEventListener('click', () => {
+        const cell = btn.closest('[data-doc-type]');
+        const type = cell.dataset.docType;
+        const file = cell.querySelector('input[type=file]').files[0];
+        save(btn, async () => {
+          const storagePath = await uploadViaSignedUrl(`${docsBase}/upload-url`, { document_type: type }, BUCKETS.trip, file);
+          await userApi(docsBase, { method: 'POST', body: { document_type: type, storage_path: storagePath, file_name: file.name, mime_type: file.type } });
+        }, `${TRIP_DOC_LABELS[type]} uploaded.`);
+      }));
+
+      body.querySelector('[data-doc-number]').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const number = e.currentTarget.elements.document_number.value.trim();
+        save(e.currentTarget.querySelector('button'), () =>
+          userApi(`${docsBase}/number`, { method: 'POST', body: { document_type: 'eway_bill', document_number: number } }),
+        number ? 'E-Way Bill number saved.' : 'E-Way Bill number cleared.');
+      });
+
+      body.querySelector('[data-delivery]').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const f = e.currentTarget.elements;
+        save(e.currentTarget.querySelector('button'), () =>
+          userApi(`${docsBase}/delivery-contact`, {
+            method: 'POST',
+            body: { delivery_person_name: f.delivery_person_name.value.trim(), delivery_person_contact: f.delivery_person_contact.value.trim() }
+          }),
+        'Delivery person saved.');
+      });
     }
 
     function renderLoadForm(slot) {
@@ -1702,7 +1765,10 @@
       [/^PATCH \/truck-availability\/[^/]+$/, 'Updated truck availability'],
       [/^POST \/loads\/?$/, 'Posted a load'],
       [/^POST \/load-bids\/[^/]+\/approve$/, 'Accepted a bid — trip confirmed'],
-      [/^POST \/load-bids\/[^/]+\/reject$/, 'Declined a bid']
+      [/^POST \/load-bids\/[^/]+\/reject$/, 'Declined a bid'],
+      [/^POST \/load-bids\/load\/[^/]+\/documents$/, 'Uploaded a trip document'],
+      [/^POST \/load-bids\/load\/[^/]+\/documents\/number$/, 'Saved the E-Way Bill number'],
+      [/^POST \/load-bids\/load\/[^/]+\/documents\/delivery-contact$/, 'Saved the delivery person']
     ];
 
     function describeActivity(action) {
