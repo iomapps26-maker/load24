@@ -143,6 +143,19 @@
     .upload-cell { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
     .upload-cell input[type=file] { font-size: 12px; max-width: 210px; }
 
+    .back-link { background: none; border: none; padding: 0; color: var(--brand); font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; margin-bottom: 12px; }
+    .load-summary { display: flex; flex-wrap: wrap; gap: 6px 22px; font-size: 13.5px; color: var(--slate); margin: -4px 0 16px; align-items: center; }
+    .load-summary b { color: var(--ink); }
+    .countdown { font-size: 11.5px; font-weight: 700; color: var(--red); margin-top: 3px; }
+    .trip-banner { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 14px 16px; margin-bottom: 16px; color: #15803d; }
+    .trip-banner .lbl { font-size: 12px; color: var(--slate); }
+    .trip-banner .ref { font-family: monospace; font-size: 18px; font-weight: 800; color: var(--ink); }
+    .trip-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; margin-bottom: 16px; }
+    .trip-card { border: 1px solid var(--slate-200); border-radius: 12px; padding: 14px 16px; font-size: 13.5px; color: var(--slate); line-height: 1.6; }
+    .trip-card h4 { margin: 0 0 6px; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--slate-light); }
+    .trip-card .who { color: var(--ink); font-weight: 700; font-size: 15px; }
+    .trip-card a { color: var(--brand); font-weight: 700; text-decoration: none; }
+
     .desk-toast {
       position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 50;
       background: var(--navy); color: #fff; font-size: 14px; font-weight: 600; padding: 12px 18px;
@@ -323,6 +336,7 @@
       truckEditor: null,       // null | 'new' | truck id being edited
       truckDocsId: null,       // truck whose documents panel is open
       showLoadForm: false,
+      loadView: null,          // null | { id, mode: 'bids' | 'trip' } — one load's bids or confirmed trip
       showAvailabilityForm: false,
       knownNames: new Map()    // user_id -> name, for the activity feed
     };
@@ -616,6 +630,7 @@
         state.truckDocsId = null;
         state.showLoadForm = false;
         state.showAvailabilityForm = false;
+        state.loadView = null;
       }
       state.userId = userId;
       state.tab = tab || (sameUser && state.tab) || 'profile';
@@ -1291,7 +1306,20 @@
 
     // ---------- Loads tab ----------
 
-    function renderLoads(body) {
+    // l.bids is the overview's per-load count ({ total, pending, approved }).
+    function bidsCell(l) {
+      const b = l.bids || { total: 0, pending: 0, approved: 0 };
+      if (b.approved) return `<button type="button" class="btn btn-brand btn-sm" data-load-view="trip" data-load="${escAttr(l.id)}">${icon('route')} View trip</button>`;
+      if (!b.total) return '<span class="sub-line">No bids yet</span>';
+      return `<button type="button" class="btn btn-outline-slate btn-sm" data-load-view="bids" data-load="${escAttr(l.id)}">${icon('gavel')} ${b.total} bid${b.total === 1 ? '' : 's'}</button>
+        ${b.pending ? `<div class="sub-line" style="color:var(--brand);font-weight:700;">${b.pending} waiting</div>` : ''}`;
+    }
+
+    function renderLoads(body, seq) {
+      if (state.loadView) {
+        const { id, mode } = state.loadView;
+        return mode === 'trip' ? renderTrip(body, seq, id) : renderBids(body, seq, id);
+      }
       const { loads, profile } = state.overview;
       const canPost = LOAD_ROLES.includes(profile.user_type);
       body.innerHTML = `
@@ -1304,7 +1332,7 @@
         ${loads.length ? `
           <div class="md-table-wrap">
             <table class="md-table">
-              <thead><tr><th>Load</th><th>Route</th><th>Material</th><th>Truck</th><th>Freight</th><th>Loading</th><th>Status</th></tr></thead>
+              <thead><tr><th>Load</th><th>Route</th><th>Material</th><th>Truck</th><th>Freight</th><th>Loading</th><th>Status</th><th>Bids</th></tr></thead>
               <tbody>
                 ${loads.map((l) => `
                   <tr>
@@ -1315,6 +1343,7 @@
                     <td>${l.bhada_price != null ? escapeHtml(formatInr(l.bhada_price)) : '—'}</td>
                     <td>${escapeHtml(formatDay(l.loading_date))}${l.loading_time ? `<div class="sub-line">${escapeHtml(l.loading_time)}</div>` : ''}</td>
                     <td>${statusBadge(l.status, ['active', 'completed'], ['cancelled'], ['matched', 'in_transit'])} ${supportTag(l)}</td>
+                    <td>${bidsCell(l)}</td>
                   </tr>`).join('')}
               </tbody>
             </table>
@@ -1322,6 +1351,233 @@
 
       if (canPost) $('postLoadBtn').addEventListener('click', () => { state.showLoadForm = true; renderTab(); });
       if (state.showLoadForm && canPost) renderLoadForm($('loadFormSlot'));
+      body.querySelectorAll('[data-load-view]').forEach((btn) => btn.addEventListener('click', () => {
+        state.loadView = { id: btn.dataset.load, mode: btn.dataset.loadView };
+        renderTab();
+      }));
+    }
+
+    function routeOf(l) {
+      return `${l.loading_city || l.loading_pincode || '?'} → ${l.unloading_city || l.unloading_pincode || '?'}`;
+    }
+
+    function wireLoadViewNav(body) {
+      body.querySelector('[data-back]').addEventListener('click', () => { state.loadView = null; renderTab(); });
+      body.querySelector('[data-reload]').addEventListener('click', () => renderTab());
+    }
+
+    // ---------- one load's bids ----------
+    // Served by /api/load-bids (loadBids.js) through the executive's
+    // load-bids section, as the caller — so accepting here is the app's own
+    // "confirm": it locks the load, creates the booking (BKnnnnnn) and
+    // declines every other bid.
+
+    // A bid lapses unanswered after load_bids.expires_at (5 min since
+    // migration 057), so the list re-polls while open and pending bids count down.
+    const BIDS_POLL_MS = 15000;
+
+    function remaining(expiresAt) {
+      const ms = new Date(expiresAt).getTime() - Date.now();
+      if (ms <= 0) return null;
+      const sec = Math.ceil(ms / 1000);
+      return `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`;
+    }
+
+    async function renderBids(body, seq, loadId, errorMessage) {
+      if (!body.querySelector('[data-bids-view]')) body.innerHTML = '<div class="admin-loading">Loading bids…</div>';
+      const { load, bids } = await userApi(`load-bids/load/${loadId}`);
+      if (!confirmStillHere(seq)) return;
+      if (bids.some((b) => b.status === 'approved')) {
+        state.loadView = { id: loadId, mode: 'trip' };
+        return renderTrip(body, seq, loadId);
+      }
+      const isOpen = (b) => b.status === 'pending' && !!remaining(b.expires_at);
+      const freight = Number(load.bhada_price);
+
+      body.innerHTML = `
+        <div data-bids-view>
+          <button type="button" class="back-link" data-back>${icon('arrow-left', 14)} All loads</button>
+          <div class="toolbar">
+            <h3>Bids on ${escapeHtml(load.load_id || load.id.slice(0, 8))} · ${escapeHtml(routeOf(load))}</h3>
+            <button type="button" class="btn btn-outline-slate btn-sm" data-reload>${icon('refresh-cw')} Refresh</button>
+          </div>
+          <div class="load-summary">
+            <span>Asked freight <b>${load.bhada_price != null ? escapeHtml(formatInr(load.bhada_price)) : '—'}</b></span>
+            <span>${escapeHtml(load.material_type || '—')}${load.weight_tons != null ? ` · ${escapeHtml(load.weight_tons)} t` : ''}</span>
+            <span>Loading ${escapeHtml(formatDay(load.loading_date))}${load.loading_time ? ` ${escapeHtml(load.loading_time)}` : ''}</span>
+            ${statusBadge(load.status, ['active', 'completed'], ['cancelled'], ['matched', 'in_transit'])}
+          </div>
+          ${bids.some(isOpen) ? `<p class="hint">Read the bids to the caller. Accepting one confirms the trip straight away, creates the booking and declines every other bid — it can't be undone from here. A bid lapses if it isn't answered before its timer runs out.</p>` : ''}
+          <div class="admin-error form-error"${errorMessage ? '' : ' hidden'}>${escapeHtml(errorMessage || '')}</div>
+          ${bids.length ? `
+            <div class="md-table-wrap">
+              <table class="md-table">
+                <thead><tr><th>Bidder</th><th>Truck</th><th>Bid</th><th>Pickup</th><th>Placed</th><th>Status</th><th></th></tr></thead>
+                <tbody>
+                  ${bids.map((b) => {
+                    const diff = freight > 0 ? Number(b.amount) - freight : 0;
+                    const open = isOpen(b);
+                    return `
+                    <tr>
+                      <td class="strong">${escapeHtml(b.bid_by_name || b.bid_by_email)}
+                        <div class="sub-line">${escapeHtml([USER_TYPES[b.bid_by_type] || titleCase(b.bid_by_type), b.bid_by_mobile].filter(Boolean).join(' · '))}</div></td>
+                      <td class="mono">${escapeHtml(b.truck_number || '—')}</td>
+                      <td class="strong">${escapeHtml(formatInr(b.amount))}${diff ? `<div class="sub-line">${diff > 0 ? '+' : '−'}${escapeHtml(formatInr(Math.abs(diff)))} vs asked</div>` : ''}</td>
+                      <td>${b.expected_pickup_at ? escapeHtml(formatDate(b.expected_pickup_at)) : '—'}</td>
+                      <td>${escapeHtml(formatDate(b.created_at))}</td>
+                      <td>${open
+                        ? `<span class="badge badge-orange">Waiting</span><div class="countdown" data-expires="${escAttr(b.expires_at)}">${remaining(b.expires_at)} left</div>`
+                        : b.status === 'pending' ? '<span class="badge badge-slate">Expired</span>' : statusBadge(b.status, ['approved'], ['rejected'])}</td>
+                      <td>${open ? `<div class="row-actions">
+                        <button type="button" class="btn btn-brand btn-sm" data-accept="${escAttr(b.id)}">${icon('check')} Accept</button>
+                        <button type="button" class="btn btn-outline-slate btn-sm" data-decline="${escAttr(b.id)}">${icon('x')} Decline</button>
+                      </div>` : ''}</td>
+                    </tr>`;
+                  }).join('')}
+                </tbody>
+              </table>
+            </div>` : '<div class="admin-empty">No bids on this load yet.</div>'}
+        </div>`;
+      lucide.createIcons();
+      wireLoadViewNav(body);
+
+      let busy = false;
+      const act = async (btn, fn) => {
+        busy = true;
+        body.querySelectorAll('[data-accept], [data-decline]').forEach((b) => { b.disabled = true; });
+        btn.textContent = 'Saving…';
+        try {
+          await fn();
+        } catch (err) {
+          // 409s land here: bid lapsed, load already booked, bidder no longer
+          // eligible — show why on a fresh list.
+          if (confirmStillHere(seq)) await renderBids(body, seq, loadId, err.message).catch(() => alert(err.message));
+        } finally {
+          busy = false;
+        }
+      };
+      const bidFor = (id) => bids.find((b) => b.id === id);
+      body.querySelectorAll('[data-accept]').forEach((btn) => btn.addEventListener('click', () => {
+        const bid = bidFor(btn.dataset.accept);
+        if (!confirm(`Accept ${formatInr(bid.amount)} from ${bid.bid_by_name || bid.bid_by_email}?\n\nThis confirms the trip, creates the booking and declines all other bids on this load.`)) return;
+        act(btn, async () => {
+          const res = await userApi(`load-bids/${bid.id}/approve`, { method: 'POST', body: {} });
+          state.loadView = { id: loadId, mode: 'trip' };
+          await afterSave(`Bid accepted${res.booking?.booking_ref ? ` — booking ${res.booking.booking_ref}` : ''}. Trip confirmed.`);
+        });
+      }));
+      body.querySelectorAll('[data-decline]').forEach((btn) => btn.addEventListener('click', () => {
+        const bid = bidFor(btn.dataset.decline);
+        if (!confirm(`Decline ${formatInr(bid.amount)} from ${bid.bid_by_name || bid.bid_by_email}?`)) return;
+        act(btn, async () => {
+          await userApi(`load-bids/${bid.id}/reject`, { method: 'POST', body: {} });
+          await afterSave('Bid declined.');
+        });
+      }));
+
+      // Live countdown + re-poll, for as long as this list is on screen.
+      const startedAt = Date.now();
+      const timer = setInterval(() => {
+        if (!confirmStillHere(seq) || !body.isConnected) { clearInterval(timer); return; }
+        body.querySelectorAll('[data-expires]').forEach((el) => {
+          const left = remaining(el.dataset.expires);
+          el.textContent = left ? `${left} left` : 'Expired';
+        });
+        if (!busy && Date.now() - startedAt >= BIDS_POLL_MS) {
+          clearInterval(timer);
+          renderBids(body, seq, loadId).catch(() => {});
+        }
+      }, 1000);
+    }
+
+    // ---------- one load's confirmed trip ----------
+    // GET trip-details (loadBids.js) — the same record the app's Trip Details
+    // screen shows both parties; ensureBooking() there backfills the booking
+    // if its create during accept failed.
+
+    const TRIP_DOC_LABELS = { eway_bill: 'E-Way Bill', bilty: 'Bilty / LR', pod: 'Proof of Delivery' };
+
+    function partyCard(title, p) {
+      const place = [p.city, p.state].filter(Boolean).join(', ');
+      return `
+        <div class="trip-card">
+          <h4>${escapeHtml(title)}</h4>
+          <div class="who">${escapeHtml(p.full_name || p.email || '—')}</div>
+          <div>${escapeHtml([USER_TYPES[p.user_type] || titleCase(p.user_type), p.company_name].filter(Boolean).join(' · '))}</div>
+          ${p.mobile ? `<div><a href="tel:${escAttr(p.mobile)}">${escapeHtml(p.mobile)}</a></div>` : ''}
+          ${place ? `<div>${escapeHtml(place)}</div>` : ''}
+          <div style="margin-top:6px;">${kycBadge(p.kyc_status)}</div>
+        </div>`;
+    }
+
+    function pointCard(title, l, side) {
+      const v = (k) => l[`${side}_${k}`];
+      return `
+        <div class="trip-card">
+          <h4>${escapeHtml(title)}</h4>
+          <div class="who">${escapeHtml([v('city'), v('state')].filter(Boolean).join(', ') || '—')}${v('pincode') ? ` · ${escapeHtml(v('pincode'))}` : ''}</div>
+          ${v('address') ? `<div>${escapeHtml(v('address'))}</div>` : ''}
+          ${v('landmark') ? `<div>${escapeHtml(v('landmark'))}</div>` : ''}
+          ${v('poc_name') || v('poc_mobile') ? `<div>Contact: ${escapeHtml(v('poc_name') || '')}${v('poc_mobile') ? ` · <a href="tel:${escAttr(v('poc_mobile'))}">${escapeHtml(v('poc_mobile'))}</a>` : ''}</div>` : ''}
+          ${side === 'loading'
+            ? `<div>Loading ${escapeHtml(formatDay(l.loading_date))}${l.loading_time ? ` ${escapeHtml(l.loading_time)}` : ''}</div>`
+            : l.unloading_date ? `<div>Unloading ${escapeHtml(formatDay(l.unloading_date))}</div>` : ''}
+        </div>`;
+    }
+
+    async function renderTrip(body, seq, loadId) {
+      body.innerHTML = '<div class="admin-loading">Loading trip…</div>';
+      const t = await userApi(`load-bids/load/${loadId}/trip-details`);
+      if (!confirmStillHere(seq)) return;
+      const { load, bid, booking } = t;
+      const docs = t.trip_documents || {};
+      const callerIs = t.viewer_role;
+
+      body.innerHTML = `
+        <button type="button" class="back-link" data-back>${icon('arrow-left', 14)} All loads</button>
+        <div class="toolbar">
+          <h3>Trip · ${escapeHtml(load.load_id || load.id.slice(0, 8))} · ${escapeHtml(routeOf(load))}</h3>
+          <button type="button" class="btn btn-outline-slate btn-sm" data-reload>${icon('refresh-cw')} Refresh</button>
+        </div>
+        <div class="trip-banner">
+          ${icon('badge-check', 26)}
+          <div><div class="lbl">Booking</div><div class="ref">${escapeHtml(bid.booking_ref || 'Being created…')}</div></div>
+          ${statusBadge(booking?.status || load.status, ['confirmed', 'completed'], ['cancelled'], ['in_transit', 'matched'])}
+          <div style="margin-left:auto;text-align:right;"><div class="lbl">Agreed freight</div><div class="ref">${escapeHtml(formatInr(bid.amount))}</div></div>
+        </div>
+        <div class="load-summary">
+          <span>Truck <b class="mono">${escapeHtml(bid.truck_number || '—')}</b></span>
+          <span>Pickup ${bid.expected_pickup_at ? escapeHtml(formatDate(bid.expected_pickup_at)) : '—'}</span>
+          <span>Confirmed ${escapeHtml(formatDate(booking?.confirmed_at || bid.reviewed_at))}</span>
+          <span>${escapeHtml(load.material_type || '—')}${load.weight_tons != null ? ` · ${escapeHtml(load.weight_tons)} t` : ''}</span>
+        </div>
+        <div class="trip-grid">
+          ${partyCard(callerIs === 'poster' ? 'Load owner (this caller)' : 'Load owner', t.poster)}
+          ${partyCard(callerIs === 'accepter' ? 'Truck / transporter (this caller)' : 'Truck / transporter', t.accepter)}
+        </div>
+        <div class="trip-grid">
+          ${pointCard('Pickup', load, 'loading')}
+          ${pointCard('Drop', load, 'unloading')}
+        </div>
+        <div class="md-table-wrap">
+          <table class="md-table">
+            <thead><tr><th>Trip document</th><th>Number</th><th>File</th></tr></thead>
+            <tbody>
+              ${Object.entries(TRIP_DOC_LABELS).map(([type, label]) => {
+                const d = docs[type];
+                return `
+                <tr>
+                  <td class="strong">${escapeHtml(label)}${type === 'pod' && d?.delivery_person_name ? `<div class="sub-line">Delivered to ${escapeHtml(d.delivery_person_name)}${d.delivery_person_contact ? ` · ${escapeHtml(d.delivery_person_contact)}` : ''}</div>` : ''}</td>
+                  <td class="mono">${escapeHtml(d?.document_number || '—')}</td>
+                  <td>${d?.url ? `<a href="${escAttr(d.url)}" target="_blank" rel="noopener" class="btn btn-outline-slate btn-sm">${icon('external-link')} View</a>` : '<span class="sub-line">Not uploaded yet</span>'}</td>
+                </tr>`;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+        <p class="hint">Both parties now see this trip, and each other's contact details, in their app. E-Way Bill, Bilty and POD are uploaded from the app's Trip Details screen.</p>`;
+      lucide.createIcons();
+      wireLoadViewNav(body);
     }
 
     function renderLoadForm(slot) {
@@ -1444,7 +1700,9 @@
       [/^POST \/trucks\/[^/]+\/documents$/, 'Uploaded a truck document'],
       [/^POST \/truck-availability\/?$/, 'Posted truck availability'],
       [/^PATCH \/truck-availability\/[^/]+$/, 'Updated truck availability'],
-      [/^POST \/loads\/?$/, 'Posted a load']
+      [/^POST \/loads\/?$/, 'Posted a load'],
+      [/^POST \/load-bids\/[^/]+\/approve$/, 'Accepted a bid — trip confirmed'],
+      [/^POST \/load-bids\/[^/]+\/reject$/, 'Declined a bid']
     ];
 
     function describeActivity(action) {
